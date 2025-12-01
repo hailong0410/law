@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trợ lý Luật Phòng Cháy Chữa Cháy</title>
+
+    <!-- File CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="title">Trợ lý Luật Phòng Cháy Chữa Cháy</h2>
+
+        <p>Nhập câu hỏi về luật PCCC, hệ thống sẽ tìm các điều luật liên quan.  
+            Bạn cũng có thể nghe AI đọc lại điều luật.</p>
+
+        <textarea id="question" placeholder="Nhập câu hỏi của bạn..."></textarea>
+
+        <div class="buttons">
+            <button id="ask-btn">🔍 Hỏi luật</button>
+            <button id="tts-btn">🔊 Nghe trả lời</button>
+        </div>
+
+        <p id="loading-text" style="display:none;">Đang truy vấn điều luật...</p>
+
+        <div id="result"></div>
+    </div>
+
+    <!-- Dùng DUY NHẤT 1 script – không có inline code -->
+    <script src="app.js"></script>
+</body>
+</html>
