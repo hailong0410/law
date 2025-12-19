@@ -93,7 +93,7 @@ class RAGAgent:
         self.max_iterations = 10
         logger.info(f"RAGAgent initialization completed (use_conversation_history={use_conversation_history})")
 
-    def chat(self, user_message: str, system_prompt: Optional[str] = None, use_planner: Optional[bool] = None) -> str:
+    async def chat(self, session_id: str, user_message: str, system_prompt: Optional[str] = None, use_planner: Optional[bool] = None) -> str:
         """Process a user message and generate a response.
 
         If a planner is enabled (either at construction or via the per-call
@@ -104,8 +104,10 @@ class RAGAgent:
 
         Returns a string (final assistant content or aggregated plan result).
         """
-        logger.info(f"User message received: {user_message[:100]}..." if len(user_message) > 100 else f"User message received: {user_message}")
-        self.conversation_history.append({"role": "user", "content": user_message})
+        logger.info(f"User message received for session {session_id}: {user_message[:100]}..." if len(user_message) > 100 else f"User message received: {user_message}")
+        
+        # Save user message to DB
+        await self._save_history(session_id, "user", user_message)
 
         # Decide whether to use planner for this call
         call_planner = self.enable_planner if use_planner is None else bool(use_planner)
@@ -121,7 +123,8 @@ class RAGAgent:
             else:
                 content = str(result)
 
-            self.conversation_history.append({"role": "assistant", "content": content})
+            # Save assistant response to DB
+            await self._save_history(session_id, "assistant", content)
             logger.info("Response generated via planner")
             return content
 
@@ -136,15 +139,18 @@ class RAGAgent:
 
         # Prepare messages and delegate to the LLM adapter which will handle function calls
         logger.debug("Processing message with LLM and function calling coordinator")
-        messages = self._prepare_messages(system_prompt)
+        messages = await self._prepare_messages(session_id, system_prompt)
         response = self.llm.create_chat_completion(messages, coordinator=self.coordinator, max_iterations=self.max_iterations)
 
         final_response = response.get("content", "") if isinstance(response, dict) else str(response)
-        self.conversation_history.append({"role": "assistant", "content": final_response})
+        
+        # Save assistant response to DB
+        await self._save_history(session_id, "assistant", final_response)
+        
         logger.info("Response generated via LLM")
         return final_response
 
-    def _prepare_messages(self, system_prompt: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def _prepare_messages(self, session_id: str, system_prompt: Optional[str] = None) -> List[Dict[str, Any]]:
         messages: List[Dict[str, Any]] = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt + self._get_tool_instructions()})
@@ -153,20 +159,33 @@ class RAGAgent:
         
         # Only include conversation history if enabled
         if self.use_conversation_history:
-            messages.extend(self.conversation_history)
-        else:
-            # If disabled, only include the last user message (current question)
-            # This ensures each question is independent
-            if self.conversation_history:
-                last_user_msg = None
-                for msg in reversed(self.conversation_history):
-                    if msg.get("role") == "user":
-                        last_user_msg = msg
-                        break
-                if last_user_msg:
-                    messages.append(last_user_msg)
+            history = await self._get_history(session_id)
+            messages.extend(history)
         
         return messages
+
+    async def _save_history(self, session_id: str, role: str, content: str):
+        try:
+            from config.database import get_database
+            from model.chat import ChatHistoryModel
+            db = get_database()
+            history = ChatHistoryModel(session_id=session_id, chat_content=content, role=role)
+            await db.history_chat.insert_one(history.dict())
+        except Exception as e:
+            logger.error(f"Failed to save history: {e}")
+
+    async def _get_history(self, session_id: str) -> List[Dict[str, Any]]:
+        try:
+            from config.database import get_database
+            db = get_database()
+            cursor = db.history_chat.find({"session_id": session_id}).sort("time", 1)
+            history = []
+            async for doc in cursor:
+                history.append({"role": doc["role"], "content": doc["chat_content"]})
+            return history
+        except Exception as e:
+            logger.error(f"Failed to load history: {e}")
+            return []
 
     def _get_default_system_prompt(self) -> str:
         tools_info = "\n".join([f"- {tool['function']['name']}: {tool['function']['description']}" for tool in self.coordinator.get_available_tools()])
@@ -202,12 +221,14 @@ class RAGAgent:
         return """\n\nAvailable tools and their schemas:\n""" + json.dumps(self.coordinator.get_available_tools(), indent=2)
 
     def reset_conversation(self) -> None:
-        logger.info("Resetting conversation history")
-        self.conversation_history = []
+        pass
+        # logger.info("Resetting conversation history")
+        # self.conversation_history = []
 
     def get_conversation_history(self) -> List[Dict[str, Any]]:
-        logger.debug("Retrieving conversation history")
-        return self.conversation_history.copy()
+        return []
+        # logger.debug("Retrieving conversation history")
+        # return self.conversation_history.copy()
 
 
 if __name__ == "__main__":
