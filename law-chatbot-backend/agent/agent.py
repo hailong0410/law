@@ -170,7 +170,8 @@ class RAGAgent:
             from model.chat import ChatHistoryModel
             db = get_database()
             history = ChatHistoryModel(session_id=session_id, chat_content=content, role=role)
-            await db.history_chat.insert_one(history.dict())
+            # PyMongo sync operation
+            db.history_chat.insert_one(history.dict())
         except Exception as e:
             logger.error(f"Failed to save history: {e}")
 
@@ -178,9 +179,10 @@ class RAGAgent:
         try:
             from config.database import get_database
             db = get_database()
+            # PyMongo sync operation
             cursor = db.history_chat.find({"session_id": session_id}).sort("time", 1)
             history = []
-            async for doc in cursor:
+            for doc in cursor:
                 history.append({"role": doc["role"], "content": doc["chat_content"]})
             return history
         except Exception as e:

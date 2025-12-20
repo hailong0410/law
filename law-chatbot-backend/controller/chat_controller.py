@@ -19,17 +19,18 @@ async def chat(chat_request: ChatQueueModel):
         
     chat_request.is_processed = False
     
-    # Insert into queue
-    await db.chat_queue.insert_one(chat_request.dict())
+    # PyMongo sync operation
+    db.chat_queue.insert_one(chat_request.dict())
     
     return {"status": "queued", "session_id": chat_request.session_id}
 
 @router.get("/take_all_chat")
 async def take_all_chat(session_id: str = Query(...)):
     db = get_database()
+    # PyMongo sync operation
     cursor = db.history_chat.find({"session_id": session_id}).sort("time", 1)
     history = []
-    async for doc in cursor:
+    for doc in cursor:
         doc["_id"] = str(doc["_id"]) # Convert ObjectId to string
         history.append(doc)
     return history

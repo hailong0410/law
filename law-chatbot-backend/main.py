@@ -5,6 +5,8 @@ from controller.chat_controller import router as chat_router
 from service.worker import ChatWorker
 from agent.agent import RAGAgent
 
+from config.database import connect_to_mongo, close_mongo_connection
+
 app = FastAPI()
 
 # Add CORS middleware
@@ -23,6 +25,10 @@ worker = None
 @app.on_event("startup")
 async def startup_event():
     global worker
+    
+    # Initialize database connection
+    await connect_to_mongo()
+    
     # Initialize Agent
     # We assume environment variables are set for LLM configuration if needed
     # or relying on default behavior of RAGAgent
@@ -36,6 +42,9 @@ async def startup_event():
 async def shutdown_event():
     if worker:
         worker.stop()
+    
+    # Close database connection
+    await close_mongo_connection()
 
 if __name__ == "__main__":
     import uvicorn
