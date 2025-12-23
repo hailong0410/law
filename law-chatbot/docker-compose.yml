@@ -60,8 +60,10 @@ services:
         condition: service_started
     networks:
       - law_chatbot_network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ../law-chatbot-backend/storage/logs:/app/storage/logs
+      - ../law-chatbot-backend:/app
 
   # Frontend
   frontend:

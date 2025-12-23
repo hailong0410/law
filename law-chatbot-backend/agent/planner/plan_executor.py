@@ -23,6 +23,7 @@ import re
 
 from .plan_classifier import classify_prompt
 from agent.logging import logger
+from pathlib import Path
 
 
 def _build_tool_instructions(available_tools: List[Dict[str, Any]], collections: Optional[List[str]] = None) -> str:
@@ -57,89 +58,7 @@ QUAN TRỌNG: Khi bạn cần gọi một công cụ:
     return tools_text
 
 
-NON_PLAN_SYSTEM_PROMPT = (
-    """
-Bạn là một trợ lý AI thông minh. Trả lời câu hỏi của người dùng một cách chính xác và chi tiết.
 
-QUAN TRỌNG - ĐỐI VỚI CÂU HỎI TÍNH TOÁN (toán học, số học, tài chính, công thức, phương trình, phép tính):
-- KHÔNG được tìm kiếm hay xây dựng câu trả lời dựa trên kiến thức.
-- BẮT BUỘC phải sử dụng tool 'execute_python_code' để thực thi Python code và tính toán.
-- Viết Python code rõ ràng, đầy đủ để thực hiện tính toán:
-  * Sử dụng thư viện math cho các phép toán (sin, cos, sqrt, log, exp, pow, etc.)
-  * Sử dụng numpy nếu có sẵn cho tính toán phức tạp
-  * In kết quả bằng print() để trả về
-- KHÔNG được chỉ mô tả cách tính, PHẢI viết code Python thực tế và gọi execute_python_code.
-- Ví dụ: Câu hỏi "Tính 400000 / 1000000" → BẮT BUỘC gọi execute_python_code với code: "result = 400000 / 1000000\nprint(result)"
-- Ví dụ phức tạp: "Tính căn bậc hai của (400000 / 1000000)" → BẮT BUỘC gọi execute_python_code với code: "import math\nvalue = 400000 / 1000000\nresult = math.sqrt(value)\nprint(result)"
-- Sau khi có kết quả từ Python code, sử dụng kết quả đó để trả lời câu hỏi.
-
-Đối với câu hỏi không phải tính toán:
-- Câu hỏi của người dùng không cần lập kế hoạch từng bước. Hãy trả lời câu hỏi hoặc thực hiện nhiệm vụ trực tiếp.
-- Nếu bạn cần gọi một hàm/công cụ, sử dụng giao diện function-calling khi cần.
-- Khi bạn cần thực hiện một hành động, yêu cầu công cụ phù hợp (retrieve_documents, etc.).
-- Cung cấp các tham số chính xác cho mỗi lần gọi công cụ.
-- Sử dụng kết quả công cụ để tạo câu trả lời cuối cùng.
-- Ngừng gọi công cụ khi bạn có đủ thông tin để trả lời câu hỏi của người dùng.
-- Khi hoàn thành, trả về câu trả lời cuối cùng.
-"""
-)
-
-PLAN_SYSTEM_PROMPT = (
-    """
-Bạn là một người lập kế hoạch và thực thi chuyên nghiệp. Đầu tiên, chia mục tiêu của người dùng thành danh sách công việc (dưới dạng mảng JSON các đối tượng có 'id' và 'task'). Sau đó, đối với mỗi công việc, thực hiện nhiệm vụ, sử dụng function calls nếu cần, và trả về kết quả. Mỗi công việc nên nhận kết quả của các công việc trước đó làm ngữ cảnh.
-
-Giai đoạn lập kế hoạch:
-- Trả lời bằng mảng JSON: [{"id": "1", "task": "mô tả"}, {"id": "2", "task": "mô tả"}, ...]
-- Mỗi nhiệm vụ phải là nguyên tử và có thể thực thi được.
-- Chỉ trả về mảng JSON, không có văn bản khác.
-
-Giai đoạn thực thi của mỗi công việc:
-- Thực hiện mô tả nhiệm vụ từng bước.
-- Gọi công cụ khi cần để hoàn thành nhiệm vụ.
-- Khi công cụ trả về kết quả, phân tích chúng và tiến tới hoàn thành nhiệm vụ.
-- Khi nhiệm vụ hoàn thành (hoặc bạn đã làm hết sức), trả về tóm tắt ngắn gọn (không có tool_calls).
-
-ĐỐI VỚI CÂU HỎI TÍNH TOÁN (toán học, số học, tài chính, công thức, phương trình, phép tính):
-- QUAN TRỌNG: KHÔNG được tìm kiếm hay xây dựng câu trả lời. BẮT BUỘC phải sử dụng tool 'execute_python_code' để thực thi Python code.
-- Mỗi bước tính toán phải là một công việc riêng biệt trong kế hoạch.
-- Mỗi công việc tính toán PHẢI gọi tool 'execute_python_code' với mã Python để tính toán.
-- Viết Python code rõ ràng, đầy đủ cho từng bước:
-  * Sử dụng thư viện math cho các phép toán (sin, cos, sqrt, log, exp, pow, etc.)
-  * Sử dụng numpy nếu có sẵn cho tính toán phức tạp
-  * In kết quả bằng print() để trả về
-  * Có thể lưu kết quả vào biến để dùng cho bước tiếp theo
-- Cố gắng viết code Python tính toán nhiều nhất có thể cho một lần gọi tool.
-- KHÔNG được chỉ mô tả cách tính, PHẢI viết code Python thực tế.
-- Ví dụ công việc: "Tính 400000 / 1000000" → BẮT BUỘC gọi execute_python_code với code: "result = 400000 / 1000000\nprint(result)"
-- Ví dụ công việc phức tạp: "Tính căn bậc hai của (400000 / 1000000)" → BẮT BUỘC gọi execute_python_code với code: "import math\nvalue = 400000 / 1000000\nresult = math.sqrt(value)\nprint(result)"
-- Kết quả từ mỗi bước sẽ được truyền cho bước tiếp theo trong kế hoạch.
-- Cuối cùng, sử dụng tất cả kết quả tính toán để chọn đáp án đúng.
-
-VÍ DỤ PLAN CHO CÂU HỎI TÍNH TOÁN:
-Câu hỏi: "Tính lãi suất kép: vốn ban đầu 1000000, lãi suất 5% mỗi năm, gửi trong 3 năm. Sau đó tính căn bậc hai của số tiền cuối cùng"
-
-Plan JSON phải trả về:
-[
-  {"id": "1", "task": "Gọi execute_python_code để tính số tiền sau năm 1: 1000000 * (1 + 0.05)"},
-  {"id": "2", "task": "Gọi execute_python_code để tính số tiền sau năm 2: kết quả bước 1 * (1 + 0.05)"},
-  {"id": "3", "task": "Gọi execute_python_code để tính số tiền sau năm 3: kết quả bước 2 * (1 + 0.05)"},
-  {"id": "4", "task": "Gọi execute_python_code để tính căn bậc hai của số tiền cuối cùng: math.sqrt(kết quả bước 3)"}
-]
-
-QUAN TRỌNG - Khi thực thi mỗi task:
-- VÍ DỤ PLAN CHO CÂU HỎI TÍNH TOÁN:
-Câu hỏi: "Tính lãi suất kép: vốn ban đầu 1000000, lãi suất 5% mỗi năm, gửi trong 3 năm. Sau đó tính căn bậc hai của số tiền cuối cùng"
-
-Plan JSON phải trả về:
-[
-  {"id": "1", "task": "Gọi execute_python_code để tính số tiền sau năm 1: 1000000 * (1 + 0.05) bằng Python code"},
-  {"id": "2", "task": "Gọi execute_python_code để tính số tiền sau năm 2: kết quả bước 1 * (1 + 0.05) bằng Python code"},
-  {"id": "3", "task": "Gọi execute_python_code để tính số tiền sau năm 3: kết quả bước 2 * (1 + 0.05) bằng Python code"},
-  {"id": "4", "task": "Gọi execute_python_code để tính căn bậc hai của số tiền cuối cùng: math.sqrt(kết quả bước 3) bằng Python code"}
-]
-
-"""
-)
 class AutoPlanExecutor:
     """Unified entrypoint: classify prompt and dispatch to plan or non-plan executor."""
     def __init__(
@@ -168,12 +87,28 @@ class AutoPlanExecutor:
         if question_classify:
             logger.debug(f"Using separate LLM for classification: {getattr(question_classify, 'model_name', 'unknown')}")
 
+        # Load prompts
+        self.plan_prompt = self._load_prompt("plan_prompt.txt", "Plan instructions not found")
+        self.non_plan_prompt = self._load_prompt("non_plan_prompt.txt", "Non-plan instructions not found")
+
+    def _load_prompt(self, filename: str, default: str) -> str:
+        try:
+            prompt_path = Path(__file__).parent.parent / "prompts" / filename
+            if prompt_path.exists():
+                logger.info(f"Loading prompt from {prompt_path}")
+                with open(prompt_path, "r", encoding="utf-8") as f:
+                    return f.read().strip()
+        except Exception as e:
+            logger.warning(f"Failed to load prompt {filename}: {e}")
+        return default
+
     def run(
         self, 
         user_prompt: str, 
         coordinator: Optional[Any] = None, 
         max_iterations: int = 10,
-        available_tools: Optional[List[Dict[str, Any]]] = None
+        available_tools: Optional[List[Dict[str, Any]]] = None,
+        system_prompt: Optional[str] = None
     ) -> Dict[str, Any]:
         """Classify and dispatch to plan or non-plan executor."""
         tools_to_use = available_tools or self.available_tools
@@ -182,21 +117,29 @@ class AutoPlanExecutor:
         logger.info(f"[AUTO PLAN EXECUTOR] Prompt classified as: '{mode}' (type: {type(mode)})")
         logger.info(f"[AUTO PLAN EXECUTOR] Checking if mode == 'plan': {mode == 'plan'}")
         
+        # Use instance-level prompts loaded from files
+        plan_prompt = self.plan_prompt
+        non_plan_prompt = self.non_plan_prompt
+        
         if mode == "plan":
             logger.info("[AUTO PLAN EXECUTOR] Dispatching to PlanExecutor")
             return self.plan_executor.execute_plan(
                 user_prompt,
                 coordinator=coordinator,
-                system_prompt=PLAN_SYSTEM_PROMPT,
+                system_prompt=system_prompt, # Pass pure system prompt (Law/Persona)
+                plan_instruction=plan_prompt, # Pass core logic as instruction
                 max_iterations=max_iterations,
                 available_tools=tools_to_use,
             )
         else:
             logger.info(f"[AUTO PLAN EXECUTOR] Dispatching to NonGoalExecutor (mode was: '{mode}')")
+            # Inject core logic into user prompt
+            user_prompt_with_instruction = f"{non_plan_prompt}\n\nUSER QUESTION:\n{user_prompt}"
+            
             return self.nonge_executor.run(
-                user_prompt,
+                user_prompt_with_instruction,
                 coordinator=coordinator,
-                system_prompt=NON_PLAN_SYSTEM_PROMPT,
+                system_prompt=system_prompt, # Pass pure system prompt (Law/Persona)
                 max_iterations=max_iterations,
                 available_tools=tools_to_use,
             )
@@ -280,7 +223,8 @@ class PlanExecutor:
     def _ask_for_todos(
         self, 
         goal: str, 
-        system_prompt: Optional[str] = None, 
+        system_prompt: Optional[str] = None,
+        plan_instruction: Optional[str] = None, 
         max_iterations: int = 6,
         available_tools: Optional[List[Dict[str, Any]]] = None
     ) -> List[Dict[str, Any]]:
@@ -291,8 +235,17 @@ class PlanExecutor:
   {"id": "2", "task": "Task description 2"},
   {"id": "3", "task": "Task description 3"}
 ]"""
-        sp = (system_prompt or "") + f"\n\nQUAN TRỌNG: Bạn PHẢI trả lời CHỈ bằng một mảng JSON hợp lệ, không có văn bản nào khác.\n\nFormat bắt buộc:\n{json_format_example}\n\nYêu cầu:\n- Mỗi phần tử là một object có 'id' (string hoặc number) và 'task' (string)\n- Không có văn bản giải thích, không có markdown code block, chỉ JSON thuần\n- JSON phải hợp lệ và có thể parse được ngay"
-        messages = [{"role": "system", "content": sp}, {"role": "user", "content": f"Tạo danh sách công việc để đạt được mục tiêu này:\n\n{goal}"}]
+        # System prompt now only contains Persona/Law info
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+            
+        # Core logic + JSON format + Goal goes to User message
+        full_instruction = (plan_instruction or "") + f"\n\nQUAN TRỌNG: Bạn PHẢI trả lời CHỈ bằng một mảng JSON hợp lệ, không có văn bản nào khác.\n\nFormat bắt buộc:\n{json_format_example}\n\nYêu cầu:\n- Mỗi phần tử là một object có 'id' (string hoặc number) và 'task' (string)\n- Không có văn bản giải thích, không có markdown code block, chỉ JSON thuần\n- JSON phải hợp lệ và có thể parse được ngay"
+        
+        user_content = f"{full_instruction}\n\nMỤC TIÊU CẦN LẬP KẾ HOẠCH:\n{goal}"
+        
+        messages.append({"role": "user", "content": user_content})
         resp = self.llm.create_chat_completion(messages, max_iterations=max_iterations)
         content = resp.get("content") if isinstance(resp, dict) else str(resp)
         
@@ -367,24 +320,20 @@ class PlanExecutor:
         self, 
         goal: str, 
         coordinator: Optional[Any] = None, 
-        system_prompt: Optional[str] = None, 
+        system_prompt: Optional[str] = None,
+        plan_instruction: Optional[str] = None, 
         max_iterations: int = 6,
         available_tools: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
-        """Create a todo list for `goal` and execute each todo sequentially.
-
-        Args:
-            goal: high-level goal string
-            coordinator: optional coordinator to allow function/tool calls within LLM executions
-            system_prompt: optional system-level instructions
-            max_iterations: max iterations for the adapter per call
-            available_tools: list of available tool schemas for the LLM
-
-        Returns:
-            dict with keys: 'goal', 'todos' (list of todos with results), 'aggregated' (combined result)
-        """
+        """Create a todo list for `goal` and execute each todo sequentially."""
         logger.info(f"Starting plan execution for goal: {goal[:100]}..." if len(goal) > 100 else f"Starting plan execution for goal: {goal}")
-        todos = self._ask_for_todos(goal, system_prompt=system_prompt, max_iterations=max_iterations, available_tools=available_tools)
+        todos = self._ask_for_todos(
+            goal, 
+            system_prompt=system_prompt, 
+            plan_instruction=plan_instruction,
+            max_iterations=max_iterations, 
+            available_tools=available_tools
+        )
 
         results = []
         accumulated_context = []  # list of dicts {'id','task','result'}

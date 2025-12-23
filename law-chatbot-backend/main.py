@@ -32,40 +32,53 @@ worker = None
 @app.on_event("startup")
 async def startup_event():
     global worker
+    print(">>> STARTUP EVENT TRIGGERED <<<", flush=True)
     
-    # Initialize database connection (sync)
-    connect_to_mongo()
-    
-    # Read agent configuration from environment variables
-    import os
-    
-    llm_type = os.getenv("LLM_TYPE", "gemini")
-    llm_config = {
-        "api_key": os.getenv("GEMINI_API_KEY"),
-        "model": os.getenv("GEMINI_MODEL"),
-    }
-    
-    # Agent settings
-    enable_planner = os.getenv("ENABLE_PLANNER", "true").lower() == "true"
-    use_conversation_history = os.getenv("USE_CONVERSATION_HISTORY", "true").lower() == "true"
-    max_iterations = int(os.getenv("MAX_ITERATIONS", "10"))
-    
-    # Vector database settings
-    vector_db_backend = os.getenv("VECTOR_DB_BACKEND", "in-memory")
-    
-    logger.info(f"Initializing agent with config: llm_type={llm_type}, enable_planner={enable_planner}, vector_db_backend={vector_db_backend}")
-    
-    # Initialize Agent with environment configuration
-    agent = RAGAgent(
-        llm_type=llm_type,
-        llm_config=llm_config,
-        enable_planner=enable_planner,
-        use_conversation_history=use_conversation_history
-    )
-    
-    loop = asyncio.get_running_loop()
-    worker = ChatWorker(agent, main_loop=loop)
-    worker.start()
+    try:
+        # Initialize database connection (sync)
+        print(">>> Connecting to MongoDB...", flush=True)
+        connect_to_mongo()
+        print(">>> MongoDB connected.", flush=True)
+        
+        # Read agent configuration from environment variables
+        import os
+        
+        llm_type = os.getenv("LLM_TYPE", "gemini")
+        llm_config = {
+            "api_key": os.getenv("GEMINI_API_KEY"),
+            "model": os.getenv("GEMINI_MODEL"),
+        }
+        
+        # Agent settings
+        enable_planner = os.getenv("ENABLE_PLANNER", "true").lower() == "true"
+        use_conversation_history = os.getenv("USE_CONVERSATION_HISTORY", "true").lower() == "true"
+        max_iterations = int(os.getenv("MAX_ITERATIONS", "10"))
+        
+        # Vector database settings
+        vector_db_backend = os.getenv("VECTOR_DB_BACKEND", "in-memory")
+        
+        print(f">>> Config: llm_type={llm_type}, enable_planner={enable_planner}", flush=True)
+        
+        # Initialize Agent with environment configuration
+        print(">>> Initializing Agent...", flush=True)
+        agent = RAGAgent(
+            llm_type=llm_type,
+            llm_config=llm_config,
+            enable_planner=enable_planner,
+            use_conversation_history=use_conversation_history
+        )
+        print(">>> Agent Initialized.", flush=True)
+        
+        loop = asyncio.get_running_loop()
+        print(">>> Starting Worker...", flush=True)
+        worker = ChatWorker(agent, main_loop=loop)
+        worker.start()
+        print(">>> Worker Started.", flush=True)
+        
+    except Exception as e:
+        print(f">>> STARTUP ERROR: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
 
 @app.on_event("shutdown")
 async def shutdown_event():

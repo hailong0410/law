@@ -8,6 +8,7 @@ with a straightforward, maintainable implementation.
 
 from typing import Optional, Dict, Any, List
 import json
+from pathlib import Path
 
 from agent.function_calling.coordinator import FunctionCallingCoordinator
 from agent.memory import VectorDatabase
@@ -116,7 +117,12 @@ class RAGAgent:
         if call_planner and self.planner is not None:
             logger.info("[RAG AGENT] Using planner for message processing")
             # Planner returns a dict; normalize to string output
-            result = self.planner.run(user_message, coordinator=self.coordinator, max_iterations=self.max_iterations)
+            result = self.planner.run(
+                user_message, 
+                coordinator=self.coordinator, 
+                max_iterations=self.max_iterations,
+                system_prompt=system_prompt
+            )
             # The planner may return different keys depending on the path
             if isinstance(result, dict):
                 content = result.get("content") or result.get("aggregated") or json.dumps(result)
@@ -190,6 +196,23 @@ class RAGAgent:
             return []
 
     def _get_default_system_prompt(self) -> str:
+        # Try to load system prompt from file first
+        system_prompt_file = Path(__file__).parent.parent / "service" / "system_prompt.txt"
+        base_prompt = ""
+        
+        try:
+            if system_prompt_file.exists():
+                with open(system_prompt_file, "r", encoding="utf-8") as f:
+                    base_prompt = f.read().strip()
+                logger.info(f"Loaded system prompt from {system_prompt_file}")
+        except Exception as e:
+            logger.warning(f"Failed to load system prompt from file: {str(e)}, using default")
+        
+        # If no file or failed to load, use default prompt
+        if not base_prompt:
+            base_prompt = "Bạn là một trợ lý RAG (Retrieval-Augmented Generation) hữu ích."
+        
+        # Append tools and collections info
         tools_info = "\n".join([f"- {tool['function']['name']}: {tool['function']['description']}" for tool in self.coordinator.get_available_tools()])
         
         # Get available collections from vector database
@@ -212,11 +235,10 @@ class RAGAgent:
             logger.debug(f"Could not retrieve collections info: {str(e)}")
         
         return (
-            f"Bạn là một trợ lý RAG (Retrieval-Augmented Generation) hữu ích. \n"
+            f"{base_prompt}\n\n"
+            f"## CÔNG CỤ KHẢ DỤNG\n\n"
             f"Bạn có quyền truy cập các công cụ sau:\n\n{tools_info}\n"
             f"{collections_info}\n"
-            "Khi bạn cần lấy thông tin hoặc thực hiện hành động, hãy gọi các công cụ phù hợp.\n"
-            "QUAN TRỌNG: Khi truy vấn một collection cụ thể, sử dụng 'query_collection' với tên collection phù hợp nhất với chủ đề câu hỏi của người dùng."
         )
 
     def _get_tool_instructions(self) -> str:

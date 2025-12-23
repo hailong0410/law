@@ -1,0 +1,250 @@
+2025-12-23 15:02:37 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:02:37 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:02:37 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:02:39 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:02:39 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:02:39 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:02:39 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:02:39 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:02:39 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:02:39 - agentchain - INFO - LLM created successfully
+2025-12-23 15:02:39 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:02:39 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:02:39 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:02:39 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:04:38 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:04:38 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:04:38 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:04:39 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:04:39 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:04:39 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:04:39 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:04:39 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:04:39 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:04:39 - agentchain - INFO - LLM created successfully
+2025-12-23 15:04:39 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:04:39 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:04:39 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:04:39 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:05:11 - agentchain - INFO - User message received: bạn là ai
+2025-12-23 15:05:11 - agentchain - INFO - [RAG AGENT] Planner check: enable_planner=True, use_planner=None, call_planner=True, planner is None=False
+2025-12-23 15:05:11 - agentchain - INFO - [RAG AGENT] Using planner for message processing
+2025-12-23 15:05:11 - agentchain - INFO - [AUTO PLAN EXECUTOR] Classifying prompt to determine execution mode (plan or non-plan)
+2025-12-23 15:05:11 - agentchain - INFO - [PLAN CLASSIFIER] Starting classification with adapter: gemini-2.5-flash
+2025-12-23 15:05:13 - agentchain - INFO - [PLAN CLASSIFIER] Question: bạn là ai...
+2025-12-23 15:05:13 - agentchain - INFO - [PLAN CLASSIFIER] LLM raw response: non-plan
+2025-12-23 15:05:13 - agentchain - INFO - [PLAN CLASSIFIER] Decision: non-plan (matched 'non-plan' in response) - Adapter: gemini-2.5-flash
+2025-12-23 15:05:13 - agentchain - INFO - [AUTO PLAN EXECUTOR] Prompt classified as: 'non-plan' (type: <class 'str'>)
+2025-12-23 15:05:13 - agentchain - INFO - [AUTO PLAN EXECUTOR] Checking if mode == 'plan': False
+2025-12-23 15:05:13 - agentchain - INFO - [AUTO PLAN EXECUTOR] Dispatching to NonGoalExecutor (mode was: 'non-plan')
+2025-12-23 15:05:13 - agentchain - INFO - NonGoalExecutor starting execution
+2025-12-23 15:05:14 - agentchain - INFO - Final response received after 1 iterations
+2025-12-23 15:05:14 - agentchain - INFO - Raw LLM response (NonGoalExecutor):
+Tôi là một mô hình ngôn ngữ lớn, được Google huấn luyện.
+================================================================================
+2025-12-23 15:05:14 - agentchain - INFO - NonGoalExecutor execution completed
+2025-12-23 15:05:14 - agentchain - INFO - Response generated via planner
+2025-12-23 15:09:20 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:09:20 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:09:20 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:09:20 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:09:20 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:09:20 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:09:20 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:09:20 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:09:20 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:09:20 - agentchain - INFO - LLM created successfully
+2025-12-23 15:09:21 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:09:21 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:09:21 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:09:21 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:09:59 - agentchain - INFO - User message received: bạn là ai
+2025-12-23 15:09:59 - agentchain - INFO - [RAG AGENT] Planner check: enable_planner=True, use_planner=None, call_planner=True, planner is None=False
+2025-12-23 15:09:59 - agentchain - INFO - [RAG AGENT] Using planner for message processing
+2025-12-23 15:09:59 - agentchain - INFO - [AUTO PLAN EXECUTOR] Classifying prompt to determine execution mode (plan or non-plan)
+2025-12-23 15:09:59 - agentchain - INFO - [PLAN CLASSIFIER] Starting classification with adapter: gemini-2.5-flash
+2025-12-23 15:10:00 - agentchain - INFO - [PLAN CLASSIFIER] Question: bạn là ai...
+2025-12-23 15:10:00 - agentchain - INFO - [PLAN CLASSIFIER] LLM raw response: non-plan
+2025-12-23 15:10:00 - agentchain - INFO - [PLAN CLASSIFIER] Decision: non-plan (matched 'non-plan' in response) - Adapter: gemini-2.5-flash
+2025-12-23 15:10:00 - agentchain - INFO - [AUTO PLAN EXECUTOR] Prompt classified as: 'non-plan' (type: <class 'str'>)
+2025-12-23 15:10:00 - agentchain - INFO - [AUTO PLAN EXECUTOR] Checking if mode == 'plan': False
+2025-12-23 15:10:00 - agentchain - INFO - [AUTO PLAN EXECUTOR] Dispatching to NonGoalExecutor (mode was: 'non-plan')
+2025-12-23 15:10:00 - agentchain - INFO - NonGoalExecutor starting execution
+2025-12-23 15:10:02 - agentchain - INFO - Final response received after 1 iterations
+2025-12-23 15:10:02 - agentchain - INFO - Raw LLM response (NonGoalExecutor):
+Tôi là một mô hình ngôn ngữ lớn, được đào tạo bởi Google.
+================================================================================
+2025-12-23 15:10:02 - agentchain - INFO - NonGoalExecutor execution completed
+2025-12-23 15:10:02 - agentchain - INFO - Response generated via planner
+2025-12-23 15:11:30 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:11:30 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:11:30 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:11:31 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:11:31 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:11:31 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:11:31 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:11:31 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:11:31 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:11:31 - agentchain - INFO - LLM created successfully
+2025-12-23 15:11:31 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:11:31 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:11:31 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:11:31 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:11:44 - agentchain - INFO - User message received: hỏi lại lần nữa bạn là ai
+2025-12-23 15:11:44 - agentchain - INFO - [RAG AGENT] Planner check: enable_planner=True, use_planner=None, call_planner=True, planner is None=False
+2025-12-23 15:11:44 - agentchain - INFO - [RAG AGENT] Using planner for message processing
+2025-12-23 15:11:44 - agentchain - INFO - [AUTO PLAN EXECUTOR] Classifying prompt to determine execution mode (plan or non-plan)
+2025-12-23 15:11:44 - agentchain - INFO - [PLAN CLASSIFIER] Starting classification with adapter: gemini-2.5-flash
+2025-12-23 15:11:46 - agentchain - INFO - [PLAN CLASSIFIER] Question: hỏi lại lần nữa bạn là ai...
+2025-12-23 15:11:46 - agentchain - INFO - [PLAN CLASSIFIER] LLM raw response: non-plan
+2025-12-23 15:11:46 - agentchain - INFO - [PLAN CLASSIFIER] Decision: non-plan (matched 'non-plan' in response) - Adapter: gemini-2.5-flash
+2025-12-23 15:11:46 - agentchain - INFO - [AUTO PLAN EXECUTOR] Prompt classified as: 'non-plan' (type: <class 'str'>)
+2025-12-23 15:11:46 - agentchain - INFO - [AUTO PLAN EXECUTOR] Checking if mode == 'plan': False
+2025-12-23 15:11:46 - agentchain - INFO - [AUTO PLAN EXECUTOR] Dispatching to NonGoalExecutor (mode was: 'non-plan')
+2025-12-23 15:11:46 - agentchain - INFO - NonGoalExecutor starting execution
+2025-12-23 15:11:48 - agentchain - INFO - Final response received after 1 iterations
+2025-12-23 15:11:48 - agentchain - INFO - Raw LLM response (NonGoalExecutor):
+Tôi là một mô hình ngôn ngữ lớn, được đào tạo bởi Google.
+================================================================================
+2025-12-23 15:11:48 - agentchain - INFO - NonGoalExecutor execution completed
+2025-12-23 15:11:48 - agentchain - INFO - Response generated via planner
+2025-12-23 15:16:26 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:16:26 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:16:26 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:16:27 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:16:27 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:16:27 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:16:27 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:16:27 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:16:27 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:16:27 - agentchain - INFO - LLM created successfully
+2025-12-23 15:16:27 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:16:27 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:16:27 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:16:27 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:16:48 - agentchain - INFO - User message received: chào
+2025-12-23 15:16:48 - agentchain - INFO - [RAG AGENT] Planner check: enable_planner=True, use_planner=None, call_planner=True, planner is None=False
+2025-12-23 15:16:48 - agentchain - INFO - [RAG AGENT] Using planner for message processing
+2025-12-23 15:16:48 - agentchain - INFO - [AUTO PLAN EXECUTOR] Classifying prompt to determine execution mode (plan or non-plan)
+2025-12-23 15:16:48 - agentchain - INFO - [PLAN CLASSIFIER] Starting classification with adapter: gemini-2.5-flash
+2025-12-23 15:16:50 - agentchain - INFO - [PLAN CLASSIFIER] Question: chào...
+2025-12-23 15:16:50 - agentchain - INFO - [PLAN CLASSIFIER] LLM raw response: non-plan
+2025-12-23 15:16:50 - agentchain - INFO - [PLAN CLASSIFIER] Decision: non-plan (matched 'non-plan' in response) - Adapter: gemini-2.5-flash
+2025-12-23 15:16:50 - agentchain - INFO - [AUTO PLAN EXECUTOR] Prompt classified as: 'non-plan' (type: <class 'str'>)
+2025-12-23 15:16:50 - agentchain - INFO - [AUTO PLAN EXECUTOR] Checking if mode == 'plan': False
+2025-12-23 15:16:50 - agentchain - INFO - [AUTO PLAN EXECUTOR] Dispatching to NonGoalExecutor (mode was: 'non-plan')
+2025-12-23 15:16:50 - agentchain - INFO - NonGoalExecutor starting execution
+2025-12-23 15:16:52 - agentchain - INFO - Final response received after 1 iterations
+2025-12-23 15:16:52 - agentchain - INFO - Raw LLM response (NonGoalExecutor):
+Chào bạn! Tôi có thể giúp gì cho bạn hôm nay?
+================================================================================
+2025-12-23 15:16:52 - agentchain - INFO - NonGoalExecutor execution completed
+2025-12-23 15:16:52 - agentchain - INFO - Response generated via planner
+2025-12-23 15:17:17 - agentchain - INFO - User message received: bạn là ai
+2025-12-23 15:17:17 - agentchain - INFO - [RAG AGENT] Planner check: enable_planner=True, use_planner=None, call_planner=True, planner is None=False
+2025-12-23 15:17:17 - agentchain - INFO - [RAG AGENT] Using planner for message processing
+2025-12-23 15:17:17 - agentchain - INFO - [AUTO PLAN EXECUTOR] Classifying prompt to determine execution mode (plan or non-plan)
+2025-12-23 15:17:17 - agentchain - INFO - [PLAN CLASSIFIER] Starting classification with adapter: gemini-2.5-flash
+2025-12-23 15:17:19 - agentchain - INFO - [PLAN CLASSIFIER] Question: bạn là ai...
+2025-12-23 15:17:19 - agentchain - INFO - [PLAN CLASSIFIER] LLM raw response: non-plan
+2025-12-23 15:17:19 - agentchain - INFO - [PLAN CLASSIFIER] Decision: non-plan (matched 'non-plan' in response) - Adapter: gemini-2.5-flash
+2025-12-23 15:17:19 - agentchain - INFO - [AUTO PLAN EXECUTOR] Prompt classified as: 'non-plan' (type: <class 'str'>)
+2025-12-23 15:17:19 - agentchain - INFO - [AUTO PLAN EXECUTOR] Checking if mode == 'plan': False
+2025-12-23 15:17:19 - agentchain - INFO - [AUTO PLAN EXECUTOR] Dispatching to NonGoalExecutor (mode was: 'non-plan')
+2025-12-23 15:17:19 - agentchain - INFO - NonGoalExecutor starting execution
+2025-12-23 15:17:21 - agentchain - INFO - Final response received after 1 iterations
+2025-12-23 15:17:21 - agentchain - INFO - Raw LLM response (NonGoalExecutor):
+Tôi là một trợ lý AI thông minh được phát triển bởi Google.
+================================================================================
+2025-12-23 15:17:21 - agentchain - INFO - NonGoalExecutor execution completed
+2025-12-23 15:17:21 - agentchain - INFO - Response generated via planner
+2025-12-23 15:34:29 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:34:29 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:34:29 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:34:30 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:34:30 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:34:30 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:34:30 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:34:30 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:34:30 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:34:30 - agentchain - INFO - LLM created successfully
+2025-12-23 15:34:30 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:34:30 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:34:30 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:34:30 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:37:30 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:37:30 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:37:30 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:37:31 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:37:31 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:37:31 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:37:31 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:37:31 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:37:31 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:37:31 - agentchain - INFO - LLM created successfully
+2025-12-23 15:37:31 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:37:31 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:37:31 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:37:31 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:37:33 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:37:33 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:37:33 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:37:34 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:37:34 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:37:34 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:37:34 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:37:34 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:37:34 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:37:34 - agentchain - INFO - LLM created successfully
+2025-12-23 15:37:34 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:37:34 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:37:34 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:37:34 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:37:40 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:37:40 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:37:40 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:37:41 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:37:41 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:37:41 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:37:41 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:37:41 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:37:41 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:37:41 - agentchain - INFO - LLM created successfully
+2025-12-23 15:37:41 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:37:41 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:37:41 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2025-12-23 15:37:41 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2025-12-23 15:37:41 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:37:41 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:37:42 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:37:42 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:37:42 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:37:43 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:37:43 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:37:43 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:37:43 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:37:43 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:37:43 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:37:43 - agentchain - INFO - LLM created successfully
+2025-12-23 15:37:43 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:37:43 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:37:43 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2025-12-23 15:37:43 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2025-12-23 15:37:43 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:37:43 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2025-12-23 15:39:30 - agentchain - INFO - Initializing RAGAgent...
+2025-12-23 15:39:30 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2025-12-23 15:39:30 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2025-12-23 15:39:31 - agentchain - INFO - Creating LLM with type: gemini
+2025-12-23 15:39:31 - agentchain - INFO - Creating LLM of type: gemini
+2025-12-23 15:39:31 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2025-12-23 15:39:31 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2025-12-23 15:39:31 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2025-12-23 15:39:31 - agentchain - INFO - GeminiLLM created successfully
+2025-12-23 15:39:31 - agentchain - INFO - LLM created successfully
+2025-12-23 15:39:31 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2025-12-23 15:39:31 - agentchain - INFO - Initializing AutoPlanExecutor
+2025-12-23 15:39:31 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2025-12-23 15:39:31 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2025-12-23 15:39:31 - agentchain - INFO - Planner initialized successfully
+2025-12-23 15:39:31 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
