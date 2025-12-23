@@ -3,7 +3,7 @@ MongoDB database configuration and connection management.
 
 This module provides database connection setup, configuration management,
 and utility functions for MongoDB operations in the Law Chatbot API.
-It handles both async and sync MongoDB connections with proper error handling.
+It uses PyMongo (sync) for thread-safe database operations.
 
 Author: Law Chatbot Team
 Version: 1.0.0
@@ -14,7 +14,6 @@ import traceback
 from typing import Optional
 from threading import Lock
 
-from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 
 from .logging import get_logger
@@ -65,18 +64,6 @@ class DatabaseConfig:
             db_part = self.connection_string.split("/")[-1]
             self.mongo_database = db_part.split("?")[0]
 
-    def get_client(self) -> AsyncIOMotorClient:
-        """
-        Get async MongoDB client.
-
-        Returns:
-            AsyncIOMotorClient: Async MongoDB client instance
-
-        Raises:
-            ConnectionError: If client creation fails
-        """
-        return AsyncIOMotorClient(self.connection_string)
-
     def get_sync_client(self) -> MongoClient:
         """
         Get sync MongoDB client.
@@ -109,16 +96,13 @@ class DatabaseManager:
 
         Sets up connection state variables for tracking client and database instances.
         """
-        self.async_client: Optional[AsyncIOMotorClient] = None
-        self.async_database = None
-        
         # Singleton sync client with thread-safe initialization
         self._sync_client: Optional[MongoClient] = None
         self._sync_lock = Lock()
 
-    async def connect(self):
+    def connect(self):
         """
-        Create async database connection.
+        Create database connection and indexes.
 
         Establishes connection to MongoDB, performs health check, and creates indexes.
 
@@ -136,32 +120,32 @@ class DatabaseManager:
                 else db_config.connection_string,
             )
 
-            self.async_client = db_config.get_client()
-            self.async_database = self.async_client[db_config.mongo_database]
-
+            # Get sync client (will create if needed)
+            db = self.get_database()
+            
             # Test connection
-            await self.async_client.admin.command("ping")
+            db.client.admin.command("ping")
             logger.info("✅ Connected to MongoDB: %s", db_config.mongo_database)
 
             # Create indexes
-            await self.create_indexes()
+            self.create_indexes()
 
         except (ConnectionError, TimeoutError, ValueError) as e:
             logger.error("❌ Failed to connect to MongoDB: %s", e)
             logger.error("Traceback: %s", traceback.format_exc())
             raise e
 
-    async def close(self):
+    def close(self):
         """
-        Close async database connection.
+        Close database connection.
 
         Properly closes the MongoDB client connection and cleans up resources.
         """
-        if self.async_client:
-            self.async_client.close()
-            logger.info("🔌 Disconnected from async MongoDB")
+        if self._sync_client:
+            self._sync_client.close()
+            logger.info("🔌 Disconnected from MongoDB")
 
-    async def create_indexes(self):
+    def create_indexes(self):
         """
         Create database indexes.
 
@@ -173,14 +157,16 @@ class DatabaseManager:
             AttributeError: If database structure is invalid
         """
         try:
+            db = self.get_database()
+            
             # Chat queue collection indexes
-            await self.async_database.chat_queue.create_index("session_id")
-            await self.async_database.chat_queue.create_index("is_processed")
-            await self.async_database.chat_queue.create_index("time")
+            db.chat_queue.create_index("session_id")
+            db.chat_queue.create_index("is_processed")
+            db.chat_queue.create_index("time")
 
             # Chat history collection indexes
-            await self.async_database.history_chat.create_index("session_id")
-            await self.async_database.history_chat.create_index("time")
+            db.history_chat.create_index("session_id")
+            db.history_chat.create_index("time")
 
             logger.info("📊 Database indexes created successfully")
 
@@ -214,25 +200,14 @@ class DatabaseManager:
 
         return self._sync_client[db_config.mongo_database]
 
-    def get_async_database(self):
-        """
-        Get async database instance.
-
-        Returns:
-            Database: Async MongoDB database instance or None if not connected
-        """
-        if self.async_database is None:
-            logger.error("Async database is None! Connection may have failed.")
-        return self.async_database
-
 
 # Global database manager instance
 db_manager = DatabaseManager()
 
 
-async def connect_to_mongo():
+def connect_to_mongo():
     """
-    Connect to MongoDB (async).
+    Connect to MongoDB (sync).
 
     Establishes connection to MongoDB using the global database manager.
 
@@ -241,16 +216,16 @@ async def connect_to_mongo():
         TimeoutError: If connection times out
         ValueError: If connection configuration is invalid
     """
-    await db_manager.connect()
+    db_manager.connect()
 
 
-async def close_mongo_connection():
+def close_mongo_connection():
     """
-    Close MongoDB connection (async).
+    Close MongoDB connection (sync).
 
     Properly closes the MongoDB connection and cleans up resources.
     """
-    await db_manager.close()
+    db_manager.close()
 
 
 def get_database():
@@ -264,14 +239,4 @@ def get_database():
         ConnectionError: If database connection fails
     """
     return db_manager.get_database()
-
-
-def get_async_database():
-    """
-    Get async database instance.
-
-    Returns:
-        Database: Async MongoDB database instance or None if not connected
-    """
-    return db_manager.get_async_database()
 
