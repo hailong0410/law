@@ -1,0 +1,278 @@
+"""Main RAG Agent implementation with optional planner integration.
+
+This file provides a single, clean `RAGAgent` class that integrates with the
+planner (`AutoPlanExecutor`) when an LLM adapter is available. The previous
+version contained nested/duplicated class definitions; this patch replaces it
+with a straightforward, maintainable implementation.
+"""
+
+from typing import Optional, Dict, Any, List
+import json
+from pathlib import Path
+
+from agent.function_calling.coordinator import FunctionCallingCoordinator
+from agent.memory import VectorDatabase
+from agent.logging import logger
+
+
+class RAGAgent:
+    """RAG (Retrieval-Augmented Generation) Agent with function calling and optional planning.
+
+    The agent will prefer an explicitly provided `llm_client`. If not provided,
+    it will attempt to use `get_llm` from `agent.llm.manager` when `llm_type` or
+    `llm_config` are provided.
+    """
+
+    def __init__(
+        self,
+        vector_db: Optional[Any] = None,
+        coordinator: Optional[Any] = None,
+        llm_client: Optional[Any] = None,
+        llm_type: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
+        enable_planner: bool = True,
+        use_conversation_history: bool = True,
+    ) -> None:
+        logger.info("Initializing RAGAgent...")
+        # Initialize vector DB and coordinator
+        if vector_db is None:
+            vector_db = VectorDatabase()
+            logger.debug("Created new VectorDatabase instance")
+        self.vector_db = vector_db
+
+        self.coordinator = coordinator or FunctionCallingCoordinator(self.vector_db)
+        logger.debug("FunctionCallingCoordinator initialized")
+
+        # Resolve LLM (prefer explicit llm_client)
+        self.llm = llm_client
+        if self.llm is None:
+            try:
+                from agent.llm.manager import get_llm
+
+                # Only attempt to create an LLM if some selector/config is provided
+                if llm_type or llm_config:
+                    logger.info(f"Creating LLM with type: {llm_type or 'gemini'}")
+                    self.llm = get_llm(llm_type or "gemini", llm_config or {})
+                    logger.info("LLM created successfully")
+            except Exception as e:
+                # Keep self.llm as None if we cannot import or construct an LLM
+                logger.warning(f"Failed to create LLM: {str(e)}")
+                self.llm = None
+
+        # Optionally wire in the planner (if LLM is present and planner module exists)
+        self.enable_planner = enable_planner if self.llm is not None else False
+        self.planner = None
+        if self.enable_planner and self.llm is not None:
+            try:
+                from agent.planner.plan_executor import AutoPlanExecutor
+                from agent.llm.manager import get_llm
+
+                logger.info("Initializing AutoPlanExecutor for planner")
+                # Pass available tools to the planner so it can include tool instructions in prompts
+                available_tools = self.coordinator.get_available_tools()
+                
+                # Get question_classify LLM from config if available
+                question_classify = None
+                if llm_config and "question_classify" in llm_config:
+                    question_classify_config = llm_config.get("question_classify", {})
+                    question_classify_type = question_classify_config.get("type", llm_type or "vnpt")
+                    logger.info(f"Creating question_classify LLM with type: {question_classify_type}")
+                    question_classify = get_llm(question_classify_type, question_classify_config)
+                
+                self.planner = AutoPlanExecutor(
+                    self.llm, 
+                    available_tools=available_tools,
+                    question_classify=question_classify
+                )
+                logger.info("Planner initialized successfully")
+            except Exception as e:
+                logger.warning(f"Failed to initialize planner: {str(e)}")
+                self.planner = None
+
+        self.conversation_history: List[Dict[str, Any]] = []
+        self.use_conversation_history = use_conversation_history
+        self.max_iterations = 10
+        logger.info(f"RAGAgent initialization completed (use_conversation_history={use_conversation_history})")
+
+    async def chat(self, session_id: str, user_message: str, system_prompt: Optional[str] = None, use_planner: Optional[bool] = None) -> str:
+        """Process a user message and generate a response.
+
+        If a planner is enabled (either at construction or via the per-call
+        `use_planner=True`), the agent will dispatch the message to the planner
+        which will classify and run either a plan flow or a regular non-goal
+        execution. When the planner is not used or not available, the message
+        is passed to the LLM adapter with the function-calling coordinator.
+
+        Returns a string (final assistant content or aggregated plan result).
+        """
+        logger.info(f"User message received for session {session_id}: {user_message[:100]}..." if len(user_message) > 100 else f"User message received: {user_message}")
+        
+        # Save user message to DB
+        await self._save_history(session_id, "user", user_message)
+
+        # Decide whether to use planner for this call
+        call_planner = self.enable_planner if use_planner is None else bool(use_planner)
+        logger.info(f"[RAG AGENT] Planner check: enable_planner={self.enable_planner}, use_planner={use_planner}, call_planner={call_planner}, planner is None={self.planner is None}")
+
+        if call_planner and self.planner is not None:
+            logger.info("[RAG AGENT] Using planner for message processing")
+            # Planner returns a dict; normalize to string output
+            result = self.planner.run(
+                user_message, 
+                coordinator=self.coordinator, 
+                max_iterations=self.max_iterations,
+                system_prompt=system_prompt
+            )
+            # The planner may return different keys depending on the path
+            if isinstance(result, dict):
+                content = result.get("content") or result.get("aggregated") or json.dumps(result)
+            else:
+                content = str(result)
+
+            # Save assistant response to DB
+            await self._save_history(session_id, "assistant", content)
+            logger.info("Response generated via planner")
+            return content
+
+        # If no LLM configured, return helper listing tools
+        if not self.llm:
+            logger.warning("No LLM configured, returning available tools")
+            tools = self.coordinator.get_available_tools()
+            return (
+                f"No LLM configured. Available tools:\n{json.dumps(tools, indent=2)}\n"
+                "Configure an LLM via llm_type/llm_config or provide a custom llm_client."
+            )
+
+        # Prepare messages and delegate to the LLM adapter which will handle function calls
+        logger.debug("Processing message with LLM and function calling coordinator")
+        messages = await self._prepare_messages(session_id, system_prompt)
+        response = self.llm.create_chat_completion(messages, coordinator=self.coordinator, max_iterations=self.max_iterations)
+
+        final_response = response.get("content", "") if isinstance(response, dict) else str(response)
+        
+        # Save assistant response to DB
+        await self._save_history(session_id, "assistant", final_response)
+        
+        logger.info("Response generated via LLM")
+        return final_response
+
+    async def _prepare_messages(self, session_id: str, system_prompt: Optional[str] = None) -> List[Dict[str, Any]]:
+        messages: List[Dict[str, Any]] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt + self._get_tool_instructions()})
+        else:
+            messages.append({"role": "system", "content": self._get_default_system_prompt()})
+        
+        # Only include conversation history if enabled
+        if self.use_conversation_history:
+            history = await self._get_history(session_id)
+            messages.extend(history)
+        
+        return messages
+
+    async def _save_history(self, session_id: str, role: str, content: str):
+        try:
+            from config.database import get_database
+            from model.chat import ChatHistoryModel
+            db = get_database()
+            history = ChatHistoryModel(session_id=session_id, chat_content=content, role=role)
+            # PyMongo sync operation
+            db.history_chat.insert_one(history.dict())
+        except Exception as e:
+            logger.error(f"Failed to save history: {e}")
+
+    async def _get_history(self, session_id: str) -> List[Dict[str, Any]]:
+        try:
+            from config.database import get_database
+            db = get_database()
+            # PyMongo sync operation
+            cursor = db.history_chat.find({"session_id": session_id}).sort("time", 1)
+            history = []
+            for doc in cursor:
+                history.append({"role": doc["role"], "content": doc["chat_content"]})
+            return history
+        except Exception as e:
+            logger.error(f"Failed to load history: {e}")
+            return []
+
+    def _get_default_system_prompt(self) -> str:
+        # Try to load system prompt from file first
+        system_prompt_file = Path(__file__).parent.parent / "service" / "system_prompt.txt"
+        base_prompt = ""
+        
+        try:
+            if system_prompt_file.exists():
+                with open(system_prompt_file, "r", encoding="utf-8") as f:
+                    base_prompt = f.read().strip()
+                logger.info(f"Loaded system prompt from {system_prompt_file}")
+        except Exception as e:
+            logger.warning(f"Failed to load system prompt from file: {str(e)}, using default")
+        
+        # If no file or failed to load, use default prompt
+        if not base_prompt:
+            base_prompt = "Bạn là một trợ lý RAG (Retrieval-Augmented Generation) hữu ích."
+        
+        # Append tools and collections info
+        tools_info = "\n".join([f"- {tool['function']['name']}: {tool['function']['description']}" for tool in self.coordinator.get_available_tools()])
+        
+        # Get available collections from vector database
+        collections_info = ""
+        try:
+            collections = self.vector_db.list_collections()
+            if collections:
+                collections_info = f"\n\nCác Collection có sẵn trong Database:\n"
+                for col in collections:
+                    # Get document count for each collection
+                    try:
+                        docs = self.vector_db.retrieve_by_collection(col)
+                        doc_count = len(docs) if docs else 0
+                        collections_info += f"- '{col}': {doc_count} tài liệu\n"
+                    except:
+                        collections_info += f"- '{col}'\n"
+                collections_info += "\nKhi truy vấn tài liệu, hãy chọn collection phù hợp nhất dựa trên câu hỏi của người dùng.\n"
+                collections_info += "Nếu không chắc chắn, bạn có thể truy vấn nhiều collections hoặc sử dụng 'retrieve_documents' để tìm kiếm trên tất cả collections.\n"
+        except Exception as e:
+            logger.debug(f"Could not retrieve collections info: {str(e)}")
+        
+        return (
+            f"{base_prompt}\n\n"
+            f"## CÔNG CỤ KHẢ DỤNG\n\n"
+            f"Bạn có quyền truy cập các công cụ sau:\n\n{tools_info}\n"
+            f"{collections_info}\n"
+        )
+
+    def _get_tool_instructions(self) -> str:
+        return """\n\nAvailable tools and their schemas:\n""" + json.dumps(self.coordinator.get_available_tools(), indent=2)
+
+    def reset_conversation(self) -> None:
+        pass
+        # logger.info("Resetting conversation history")
+        # self.conversation_history = []
+
+    def get_conversation_history(self) -> List[Dict[str, Any]]:
+        return []
+        # logger.debug("Retrieving conversation history")
+        # return self.conversation_history.copy()
+
+
+if __name__ == "__main__":
+    # Small demo when run as a script
+    agent = RAGAgent()
+    print("Available Tools:")
+    print("=" * 50)
+    for tool in agent.coordinator.get_available_tools():
+        func = tool["function"]
+        print(f"\n{func['name']}")
+        print(f"Description: {func['description']}")
+        print(f"Parameters: {func['parameters']}")
+
+    # If user has configured an LLM via agent.llm.manager, this shows planner usage
+    try:
+        from agent.llm.manager import get_llm
+
+        llm = get_llm("gemini", {})
+        agent_with_llm = RAGAgent(llm_client=llm)
+        print("\nCreated agent with LLM. Chat example (planner enabled):")
+        print(agent_with_llm.chat("Create a plan to learn Python in 3 months"))
+    except Exception:
+        print("No LLM available for the demo. Install/configure an LLM to try planner flows.")
