@@ -1,0 +1,318 @@
+2026-01-07 15:10:35 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:10:35 - agentchain - INFO - Initializing VectorDatabase with backend type: in-memory
+2026-01-07 15:10:35 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:10:38 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:10:38 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:10:38 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:10:38 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:10:38 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:10:38 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:10:38 - agentchain - INFO - LLM created successfully
+2026-01-07 15:10:38 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:10:38 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:10:38 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:10:38 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:10:38 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:10:38 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:13:42 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:13:43 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:13:43 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:13:43 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:13:43 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:13:43 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:13:43 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:13:43 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:13:43 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:13:43 - agentchain - INFO - LLM created successfully
+2026-01-07 15:13:43 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:13:43 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:13:43 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:13:43 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:13:43 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:13:43 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:14:30 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:14:31 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:14:31 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:14:31 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:14:31 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:14:31 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:14:31 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:14:31 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:14:31 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:14:31 - agentchain - INFO - LLM created successfully
+2026-01-07 15:14:31 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:14:31 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:14:31 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:14:31 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:14:31 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:14:31 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:15:03 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:15:03 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:15:03 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:15:03 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:15:03 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:15:03 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:15:03 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:15:03 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:15:03 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:15:03 - agentchain - INFO - LLM created successfully
+2026-01-07 15:15:03 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:15:03 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:15:03 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:15:04 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:15:04 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:15:04 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:15:47 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 15:15:47 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:15:47 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:15:47 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:15:47 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:15:47 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:15:47 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:15:47 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:15:47 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:15:47 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:15:47 - agentchain - INFO - LLM created successfully
+2026-01-07 15:15:47 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:15:47 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:15:47 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:15:47 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:15:47 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:15:47 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:16:05 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 15:16:05 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:16:05 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:16:05 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:16:05 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:16:05 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:16:05 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:16:05 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:16:05 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:16:05 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:16:05 - agentchain - INFO - LLM created successfully
+2026-01-07 15:16:05 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:16:05 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:16:05 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:16:05 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:16:05 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:16:05 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:16:23 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 15:16:23 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:16:23 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:16:23 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:16:23 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:16:23 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:16:23 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:16:23 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:16:23 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:16:23 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:16:23 - agentchain - INFO - LLM created successfully
+2026-01-07 15:16:24 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:16:24 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:16:24 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:16:24 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:16:24 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:16:24 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:15:42 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 15:15:42 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:15:42 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:15:42 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:15:42 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:15:42 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:15:42 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:15:42 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:15:42 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:15:42 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:15:42 - agentchain - INFO - LLM created successfully
+2026-01-07 15:15:42 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:15:42 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:15:42 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:15:42 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:15:42 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:15:42 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:15:50 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 15:15:50 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:15:50 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:15:50 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:15:50 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:15:50 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:15:50 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:15:50 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:15:50 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:15:50 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:15:50 - agentchain - INFO - LLM created successfully
+2026-01-07 15:15:50 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:15:50 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:15:50 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:15:50 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:15:50 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:15:50 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 22:32:18 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 22:32:18 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 22:35:10 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 22:35:10 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 22:35:10 - agentchain - INFO - Creating collection: fire_protection_law
+2026-01-07 22:35:10 - agentchain - INFO - Collection 'fire_protection_law' created successfully
+2026-01-07 22:35:10 - agentchain - ERROR - Error calling Google Embedding API: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+Please retry in 56.733376408s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerDayPerUserPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+, retry_delay {
+  seconds: 56
+}
+]
+2026-01-07 22:35:10 - agentchain - ERROR - Error adding chunks to Chroma: RuntimeError: Google Embedding API error: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim...
+2026-01-07 22:35:10 - agentchain - INFO - Searching collection 'fire_protection_law' for 3 similar chunks
+2026-01-07 22:35:11 - agentchain - ERROR - Error calling Google Embedding API: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 0, model: embedding-001
+Please retry in 56.549985053s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+violations {
+  quota_metric: "generativelanguage.googleapis.com/embed_content_free_tier_requests"
+  quota_id: "EmbedContentRequestsPerDayPerUserPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "embedding-001"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+}
+, retry_delay {
+  seconds: 56
+}
+]
+2026-01-07 15:38:12 - agentchain - INFO - Initialized Google Embedding function with model: models/embedding-001, task_type: retrieval_document
+2026-01-07 15:38:12 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:38:12 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:38:12 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:38:12 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:38:12 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:38:12 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:38:12 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:38:12 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:38:12 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:38:12 - agentchain - INFO - LLM created successfully
+2026-01-07 15:38:12 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:38:12 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:38:12 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:38:12 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:38:12 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:38:12 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 15:38:20 - agentchain - INFO - Initialized Google Embedding function with model: models/text-embedding-004, task_type: retrieval_document
+2026-01-07 15:38:20 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 15:38:20 - agentchain - INFO - Initializing RAGAgent...
+2026-01-07 15:38:20 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-07 15:38:20 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-07 15:38:20 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-07 15:38:20 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-07 15:38:20 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-07 15:38:20 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-07 15:38:20 - agentchain - INFO - GeminiLLM created successfully
+2026-01-07 15:38:20 - agentchain - INFO - LLM created successfully
+2026-01-07 15:38:20 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-07 15:38:20 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-07 15:38:20 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-07 15:38:20 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-07 15:38:20 - agentchain - INFO - Planner initialized successfully
+2026-01-07 15:38:20 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-07 22:37:55 - agentchain - INFO - Initialized Google Embedding function with model: models/text-embedding-004, task_type: retrieval_document
+2026-01-07 22:37:55 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-07 22:37:55 - agentchain - INFO - Creating collection: fire_protection_law
+2026-01-07 22:37:55 - agentchain - INFO - Collection 'fire_protection_law' created successfully
+2026-01-07 22:38:47 - agentchain - INFO - Searching collection 'fire_protection_law' for 3 similar chunks

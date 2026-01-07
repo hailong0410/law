@@ -610,40 +610,104 @@ class FunctionCallingCoordinator:
         Returns:
             Dictionary with tool_name and tool_input, or None if no valid call found
         """
+        json_str = None
         try:
-            # Try to extract JSON from response
+            # 1. Try to extract JSON from markdown code blocks first (most reliable)
             if "```json" in response_content:
-                json_str = response_content.split("```json")[1].split("```")[0]
-                data = json.loads(json_str)
+                json_str = response_content.split("```json")[1].split("```")[0].strip()
+                logger.debug("Found JSON in ```json block")
             elif "```" in response_content:
-                json_str = response_content.split("```")[1].split("```")[0]
-                data = json.loads(json_str)
-            else:
-                data = json.loads(response_content)
+                json_str = response_content.split("```")[1].split("```")[0].strip()
+                logger.debug("Found JSON in ``` block")
             
-            # Format 1: {"tool_name": "...", "tool_input": {...}}
-            if "tool_name" in data and "tool_input" in data:
-                return {
-                    "tool_name": data["tool_name"],
-                    "tool_input": data["tool_input"]
-                }
-            # Format 2: {"name": "...", "arguments": {...}}
-            elif "name" in data and "arguments" in data:
-                return {
-                    "tool_name": data["name"],
-                    "tool_input": data["arguments"]
-                }
-            # Format 3: {"tool_calls": [{"name": "...", "arguments": {...}}]}
-            elif "tool_calls" in data and isinstance(data["tool_calls"], list) and len(data["tool_calls"]) > 0:
-                first_call = data["tool_calls"][0]
-                if "name" in first_call and "arguments" in first_call:
-                    return {
-                        "tool_name": first_call["name"],
-                        "tool_input": first_call["arguments"]
-                    }
-        except (json.JSONDecodeError, ValueError):
+            # 2. If no markdown, try to parse the entire content as JSON
+            if not json_str:
+                try:
+                    data = json.loads(response_content)
+                    normalized = self._normalize_tool_call_data(data)
+                    if normalized:
+                        logger.info(f"Successfully parsed direct JSON tool call: {normalized['tool_name']}")
+                        return normalized
+                except json.JSONDecodeError:
+                    pass
+            
+            # 3. If standard parsing failed, look for JSON-like structure in the text
+            # Find the substring that looks like a JSON object or array
+            if not json_str:
+                import re
+                # Look for {"tool_calls": ...} or {"tool_name": ...} or {"name": ...}
+                start_idx = response_content.find('{')
+                end_idx = response_content.rfind('}')
+                
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    possible_json = response_content[start_idx:end_idx+1]
+                    try:
+                        data = json.loads(possible_json)
+                        normalized = self._normalize_tool_call_data(data)
+                        if normalized:
+                            logger.info(f"extracted embedded JSON tool call: {normalized['tool_name']}")
+                            return normalized
+                    except json.JSONDecodeError:
+                        pass
+
+            # 4. If we found a string in step 1, analyze it
+            if json_str:
+                data = json.loads(json_str)
+                normalized = self._normalize_tool_call_data(data)
+                if normalized:
+                    logger.info(f"Successfully parsed markdown JSON tool call: {normalized['tool_name']}")
+                    return normalized
+                else:
+                    logger.warning("Found JSON block but could not normalize to a valid tool call")
+                
+        except (json.JSONDecodeError, ValueError, Exception) as e:
+            logger.warning(f"Failed to parse tool call: {e}")
             pass
         
+        logger.debug("No valid tool call found in response")
+        return None
+
+    def _normalize_tool_call_data(self, data: Any) -> Optional[Dict[str, Any]]:
+        """Helper to normalize different tool call formats."""
+        if not isinstance(data, dict):
+            return None
+
+        # Format 1: {"tool_calls": [{"name": "...", "arguments": {...}}]}
+        if "tool_calls" in data and isinstance(data["tool_calls"], list) and len(data["tool_calls"]) > 0:
+            first_call = data["tool_calls"][0]
+            if "name" in first_call and "arguments" in first_call:
+                return {
+                    "tool_name": first_call["name"],
+                    "tool_input": first_call["arguments"]
+                }
+            # Alternate internal format inside tool_calls
+            elif "tool_name" in first_call and "tool_input" in first_call:
+                return {
+                    "tool_name": first_call["tool_name"],
+                    "tool_input": first_call["tool_input"]
+                }
+                
+        # Format 2: {"tool_name": "...", "tool_input": {...}}
+        if "tool_name" in data and "tool_input" in data:
+            return {
+                "tool_name": data["tool_name"],
+                "tool_input": data["tool_input"]
+            }
+            
+        # Format 3: {"name": "...", "arguments": {...}}
+        if "name" in data and "arguments" in data:
+            return {
+                "tool_name": data["name"],
+                "tool_input": data["arguments"]
+            }
+            
+        # Format 4: {"function": "...", "parameters": ...} (OpenAI style sometimes)
+        if "function" in data and "parameters" in data:
+             return {
+                "tool_name": data["function"],
+                "tool_input": data["parameters"]
+            }
+            
         return None
     
     def register_custom_tool(self, tool: Tool) -> None:
