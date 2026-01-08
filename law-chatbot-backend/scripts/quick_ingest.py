@@ -26,9 +26,15 @@ def main():
     # Hardcoded configuration
     law_file = Path(__file__).parent.parent / "storage" / "data" / "law.txt"
     collection_name = "fire_protection_law"
-    # Sử dụng đường dẫn tuyệt đối dựa trên project root
-    default_persist_dir = Path(__file__).parent.parent / "storage" / "chroma"
-    persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
+    
+    # Always use absolute path based on script location (not current directory)
+    project_root = Path(__file__).parent.parent  # /app/ in container
+    default_persist_dir = project_root / "storage" / "chroma"
+    
+    # Get from env or use default absolute path
+    persist_dir_str = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
+    persist_dir = Path(persist_dir_str).resolve()  # Convert to absolute path
+    
     embedding_provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()
     
     # Check if file exists
@@ -39,7 +45,7 @@ def main():
     
     print(f"📄 File: {law_file}")
     print(f"📦 Collection: {collection_name}")
-    print(f"💾 Storage: {persist_dir}")
+    print(f"💾 Storage (absolute): {persist_dir}")
     print(f"🔧 Embedding: {embedding_provider.upper()}")
     print()
     

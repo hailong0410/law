@@ -118,10 +118,16 @@ def main():
     # Configuration
     data_dir = Path(__file__).parent.parent / "storage" / "data"
     collection_name = "fire_protection_law"
-    # Sử dụng đường dẫn tuyệt đối dựa trên project root
-    default_persist_dir = Path(__file__).parent.parent / "storage" / "chroma"
-    persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
-    # Hỗ trợ kết nối qua HTTP nếu có CHROMA_HOST và CHROMA_PORT
+    
+    # Always use absolute path based on script location (not current directory)
+    project_root = Path(__file__).parent.parent  # /app/ in container
+    default_persist_dir = project_root / "storage" / "chroma"
+    
+    # Get from env or use default absolute path
+    persist_dir_str = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
+    persist_dir = Path(persist_dir_str).resolve()  # Convert to absolute path
+    
+    # ChromaDB server settings (for Docker)
     chroma_host = os.getenv("CHROMA_HOST", None)
     chroma_port = os.getenv("CHROMA_PORT", None)
     embedding_provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()
@@ -132,7 +138,7 @@ def main():
     if chroma_host and chroma_port:
         print(f"🌐 ChromaDB Server: {chroma_host}:{chroma_port}")
     else:
-        print(f"💾 Storage: {persist_dir}")
+        print(f"💾 Storage (absolute): {persist_dir}")
     print(f"🔧 Embedding: {embedding_provider.upper()}")
     print(f"📄 Max Điều per document: {max_dieu_per_doc}")
     print()

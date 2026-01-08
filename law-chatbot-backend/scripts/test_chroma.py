@@ -27,10 +27,22 @@ def test_chroma():
     print()
     
     # Configuration
-    persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", "./storage/chroma")
+    # Always use absolute path based on script location (not current directory)
+    project_root = Path(__file__).parent.parent  # /app/ in container
+    default_persist_dir = project_root / "storage" / "chroma"
+    
+    # Get from env or use default absolute path
+    persist_dir_str = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
+    persist_dir = Path(persist_dir_str).resolve()  # Convert to absolute path
+    
+    chroma_host = os.getenv("CHROMA_HOST", None)
+    chroma_port = os.getenv("CHROMA_PORT", None)
     embedding_provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()
     
-    print(f"💾 Storage: {persist_dir}")
+    if chroma_host and chroma_port:
+        print(f"🌐 ChromaDB Server: {chroma_host}:{chroma_port}")
+    else:
+        print(f"💾 Storage (absolute): {persist_dir}")
     print(f"🔧 Embedding: {embedding_provider.upper()}")
     print()
     
@@ -72,12 +84,22 @@ def test_chroma():
     # Initialize VectorDatabase
     print("🗄️  Connecting to ChromaDB...")
     try:
-        db = VectorDatabase(
-            backend_type="chroma",
-            persist_directory=persist_dir,
-            embedding_function=embedding_function
-        )
-        print("   ✓ Connected to ChromaDB")
+        # Connect to ChromaDB server if CHROMA_HOST and CHROMA_PORT are set
+        if chroma_host and chroma_port:
+            db = VectorDatabase(
+                backend_type="chroma",
+                host=chroma_host,
+                port=int(chroma_port),
+                embedding_function=embedding_function
+            )
+            print(f"   ✓ Connected to ChromaDB server at {chroma_host}:{chroma_port}")
+        else:
+            db = VectorDatabase(
+                backend_type="chroma",
+                persist_directory=persist_dir,
+                embedding_function=embedding_function
+            )
+            print(f"   ✓ Connected to ChromaDB (local mode: {persist_dir})")
     except Exception as e:
         print(f"   ❌ Failed to connect: {e}")
         import traceback
