@@ -1,5 +1,6 @@
 """Chroma backend implementation."""
 import os
+import json
 # Disable Chroma default embedding model download
 os.environ['CHROMA_DISABLE_DEFAULT_EMBEDDING'] = '1'
 from typing import List, Dict, Any, Optional, Tuple, Callable
@@ -72,6 +73,35 @@ class ChromaVectorStore(VectorStoreBackend):
         
         self.collections = {}
     
+    def _sanitize_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sanitize metadata to ensure all values are ChromaDB-compatible types.
+        ChromaDB only supports: str, int, float, bool, None
+        """
+        if not metadata:
+            return {}
+        
+        sanitized = {}
+        for key, value in metadata.items():
+            # Skip None values
+            if value is None:
+                continue
+            
+            # Convert to supported types
+            if isinstance(value, (str, int, float, bool)):
+                sanitized[key] = value
+            elif isinstance(value, list):
+                # Convert list to comma-separated string
+                sanitized[key] = ", ".join(str(v) for v in value)
+            elif isinstance(value, dict):
+                # Convert dict to JSON string
+                sanitized[key] = json.dumps(value, ensure_ascii=False)
+            else:
+                # Convert other types to string
+                sanitized[key] = str(value)
+        
+        return sanitized
+    
     def add_chunks(
         self,
         chunks: List[StoredChunk],
@@ -84,7 +114,8 @@ class ChromaVectorStore(VectorStoreBackend):
             ids = [chunk.id for chunk in chunks]
             documents = [chunk.content for chunk in chunks]
             embeddings = [chunk.embedding for chunk in chunks if chunk.embedding]
-            metadatas = [chunk.metadata or {} for chunk in chunks]
+            # Sanitize metadata to ensure ChromaDB compatibility
+            metadatas = [self._sanitize_metadata(chunk.metadata or {}) for chunk in chunks]
             
             if embeddings and len(embeddings) == len(chunks):
                 collection.add(
@@ -109,6 +140,8 @@ class ChromaVectorStore(VectorStoreBackend):
             if len(error_msg) > 200:
                 error_msg = error_msg[:200] + "..."
             logger.error(f"Error adding chunks to Chroma: {error_type}: {error_msg}")
+            import traceback
+            logger.error(traceback.format_exc())
             return False
     
     def delete_chunks(
@@ -240,11 +273,16 @@ class ChromaVectorStore(VectorStoreBackend):
             # Always use embedding_function if provided (VNPT, Google, or any custom function)
             # This prevents Chroma from using default embedding model
             if self.embedding_function:
-                self.client.create_collection(
-                    name=collection_name,
-                    embedding_function=self.embedding_function,
-                    metadata=metadata or {}
-                )
+                # ChromaDB requires metadata to be non-empty dict if provided
+                # If metadata is None or empty, don't pass it
+                create_kwargs = {
+                    "name": collection_name,
+                    "embedding_function": self.embedding_function
+                }
+                if metadata and len(metadata) > 0:
+                    create_kwargs["metadata"] = metadata
+                
+                self.client.create_collection(**create_kwargs)
             else:
                 # No embedding function provided - raise error to force explicit configuration
                 raise ValueError(
@@ -298,19 +336,24 @@ class ChromaVectorStore(VectorStoreBackend):
                 try:
                     # Try to get existing collection first
                     collection = self.client.get_collection(name=collection_name)
-                    # Check if collection has the same embedding function
-                    # If not, delete and recreate to ensure correct embedding function
-                    # Note: Chroma doesn't expose embedding function info easily, so we'll
-                    # always delete and recreate if embedding_function is provided to be safe
-                    self.client.delete_collection(name=collection_name)
-                except:
-                    pass  # Collection doesn't exist, that's fine
-                
-                # Create new collection with embedding function (VNPT, Google, or custom)
-                collection = self.client.create_collection(
-                    name=collection_name,
-                    embedding_function=self.embedding_function
-                )
+                    # Collection already exists, use it
+                    logger.debug(f"Using existing collection: {collection_name}")
+                except Exception as e:
+                    # Collection doesn't exist, create new one
+                    logger.debug(f"Collection {collection_name} doesn't exist, creating new one")
+                    try:
+                        collection = self.client.create_collection(
+                            name=collection_name,
+                            embedding_function=self.embedding_function
+                        )
+                    except Exception as create_error:
+                        # If creation fails (e.g., collection was created between get and create),
+                        # try to get it again
+                        if "already exists" in str(create_error).lower() or "409" in str(create_error):
+                            logger.debug(f"Collection was created by another process, getting it...")
+                            collection = self.client.get_collection(name=collection_name)
+                        else:
+                            raise create_error
             else:
                 # No embedding function - raise error to force explicit configuration
                 raise ValueError(

@@ -28,7 +28,10 @@ wheels/
 
 # Environment variables
 .env
-.env.local
+.env*
+*.env
+!env_example.txt
+!*.env.example
 
 # IDE
 .vscode/

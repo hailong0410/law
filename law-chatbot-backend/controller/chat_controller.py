@@ -6,6 +6,7 @@ from service.stream_manager import manager
 from datetime import datetime
 import asyncio
 import json
+import os
 
 router = APIRouter()
 
@@ -50,3 +51,26 @@ async def stream(session_id: str = Query(...)):
             print(f"Client {session_id} disconnected")
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@router.get("/info")
+async def get_info():
+    """Get information about the current LLM configuration."""
+    llm_type = os.getenv("LLM_TYPE", "gemini").lower()
+    
+    info = {
+        "llm_type": llm_type,
+        "llm_model": None,
+        "vector_db_backend": os.getenv("VECTOR_DB_BACKEND", "chroma"),
+        "enable_planner": os.getenv("ENABLE_PLANNER", "true").lower() == "true",
+        "use_conversation_history": os.getenv("USE_CONVERSATION_HISTORY", "true").lower() == "true",
+    }
+    
+    # Get model name based on LLM type
+    if llm_type == "gemini":
+        info["llm_model"] = os.getenv("GEMINI_MODEL", "gemini-pro")
+    elif llm_type == "openai":
+        info["llm_model"] = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+    elif llm_type == "vnpt":
+        info["llm_model"] = os.getenv("VNPT_MODEL", "vnptai_hackathon_large")
+    
+    return info

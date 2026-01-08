@@ -1,8 +1,7 @@
 """
 Quick script to ingest the Fire Protection Law into ChromaDB.
 
-This is a simplified version that directly ingests the law.txt file
-from the Document folder.
+Hardcoded configuration - just run it!
 """
 
 import os
@@ -24,46 +23,55 @@ def main():
     print("=" * 70)
     print()
     
-    # Configuration
-    law_file = Path(r"d:\chatbot\law\Document\law.txt")
+    # Hardcoded configuration
+    law_file = Path(__file__).parent.parent / "storage" / "data" / "law.txt"
     collection_name = "fire_protection_law"
-    persist_dir = "./storage/chroma"
+    # Sử dụng đường dẫn tuyệt đối dựa trên project root
+    default_persist_dir = Path(__file__).parent.parent / "storage" / "chroma"
+    persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
+    embedding_provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()
     
     # Check if file exists
     if not law_file.exists():
         print(f"❌ File not found: {law_file}")
-        print("   Please make sure the law.txt file exists in d:\\chatbot\\law\\Document\\")
+        print(f"   Please make sure the law.txt file exists in storage/data/")
         return
     
     print(f"📄 File: {law_file}")
     print(f"📦 Collection: {collection_name}")
     print(f"💾 Storage: {persist_dir}")
+    print(f"🔧 Embedding: {embedding_provider.upper()}")
     print()
     
     # Initialize embedding function
-    print("🔧 Initializing Google Gemini Embedding...")
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    
-    if not gemini_api_key:
-        print("   ❌ GEMINI_API_KEY not found in .env file!")
-        print()
-        print("   Please add the following to your .env file:")
-        print("   GEMINI_API_KEY=your_gemini_api_key_here")
-        print()
-        print("   You can get a free API key from: https://makersuite.google.com/app/apikey")
-        return
-    
-    print("   ✓ Using Google Gemini Embedding API")
+    print(f"🔧 Initializing {embedding_provider.upper()} Embedding...")
+    embedding_function = None
     
     try:
-        from agent.llm.gemini import get_google_embedding_function
-        embedding_function = get_google_embedding_function(
-            api_key=gemini_api_key,
-            model=os.getenv("GEMINI_EMBEDDING_MODEL", "models/text-embedding-004")
-        )
+        if embedding_provider == "openai":
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if not openai_api_key:
+                print("   ❌ OPENAI_API_KEY not found in .env file!")
+                return
+            from agent.llm.openai import get_openai_embedding_function
+            embedding_function = get_openai_embedding_function(
+                api_key=openai_api_key,
+                model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+                base_url=os.getenv("OPENAI_BASE_URL")
+            )
+        else:  # Default to Gemini
+            gemini_api_key = os.getenv("GEMINI_API_KEY")
+            if not gemini_api_key:
+                print("   ❌ GEMINI_API_KEY not found in .env file!")
+                return
+            from agent.llm.gemini import get_google_embedding_function
+            embedding_function = get_google_embedding_function(
+                api_key=gemini_api_key,
+                model=os.getenv("GEMINI_EMBEDDING_MODEL", "models/text-embedding-004")
+            )
         print("   ✓ Embedding function initialized")
     except Exception as e:
-        print(f"   ❌ Failed to initialize Google Gemini embedding: {e}")
+        print(f"   ❌ Failed to initialize embedding: {e}")
         import traceback
         traceback.print_exc()
         return
@@ -118,7 +126,7 @@ def main():
                 "source": str(law_file)
             },
             collection_name=collection_name,
-            chunking_strategy="paragraph",  # Use paragraph for legal documents
+            chunking_strategy="paragraph",
             max_chunk_length=512
         )
         
@@ -171,11 +179,6 @@ def main():
     print("=" * 70)
     print("  ✅ Ingestion Complete!")
     print("=" * 70)
-    print()
-    print("📌 Next steps:")
-    print("   1. Start your backend server: python main.py")
-    print("   2. Ask questions about fire protection law")
-    print("   3. The agent will automatically retrieve relevant information")
     print()
 
 
