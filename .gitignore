@@ -41,3 +41,7 @@ wheels/
 .DS_Store
 Thumbs.db
 
+# Logs
+law-chatbot-backend/logs/
+law-chatbot-backend/storage/logs/
+
