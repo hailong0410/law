@@ -212,37 +212,59 @@ class RAGAgent:
         if not base_prompt:
             base_prompt = "Bạn là một trợ lý RAG (Retrieval-Augmented Generation) hữu ích."
         
-        # Append tools and collections info
-        tools_info = "\n".join([f"- {tool['function']['name']}: {tool['function']['description']}" for tool in self.coordinator.get_available_tools()])
-        
         # Get available collections from vector database
         collections_info = ""
         try:
             collections = self.vector_db.list_collections()
             if collections:
-                collections_info = f"\n\nCác Collection có sẵn trong Database:\n"
-                for col in collections:
-                    # Get document count for each collection
-                    try:
-                        docs = self.vector_db.retrieve_by_collection(col)
-                        doc_count = len(docs) if docs else 0
-                        collections_info += f"- '{col}': {doc_count} tài liệu\n"
-                    except:
-                        collections_info += f"- '{col}'\n"
-                collections_info += "\nKhi truy vấn tài liệu, hãy chọn collection phù hợp nhất dựa trên câu hỏi của người dùng.\n"
-                collections_info += "Nếu không chắc chắn, bạn có thể truy vấn nhiều collections hoặc sử dụng 'retrieve_documents' để tìm kiếm trên tất cả collections.\n"
+                col_list = ', '.join([f"'{col}'" for col in collections])
+                collections_info = f"\n**Collections**: {col_list}\n"
         except Exception as e:
             logger.debug(f"Could not retrieve collections info: {str(e)}")
         
-        return (
-            f"{base_prompt}\n\n"
-            f"## CÔNG CỤ KHẢ DỤNG\n\n"
-            f"Bạn có quyền truy cập các công cụ sau:\n\n{tools_info}\n"
-            f"{collections_info}\n"
-        )
+        return f"{base_prompt}{collections_info}"
 
     def _get_tool_instructions(self) -> str:
-        return """\n\nAvailable tools and their schemas:\n""" + json.dumps(self.coordinator.get_available_tools(), indent=2)
+        """Get tool instructions for Gemini native function calling."""
+        tools = self.coordinator.get_available_tools()
+        tools_text = "\n\n## CÔNG CỤ KHẢ DỤNG\n\n"
+        
+        for tool in tools:
+            func = tool.get("function", {})
+            name = func.get("name", "unknown")
+            desc = func.get("description", "")
+            params = func.get("parameters", {})
+            tools_text += f"**{name}**: {desc}\n"
+            if params.get("properties"):
+                props = params.get("properties", {})
+                required = params.get("required", [])
+                for param_name, param_info in props.items():
+                    req_mark = " (bắt buộc)" if param_name in required else ""
+                    tools_text += f"  - {param_name}{req_mark}: {param_info.get('description', '')}\n"
+        
+        # Get collections
+        try:
+            collections = self.vector_db.list_collections()
+            if collections:
+                col_list = ', '.join([f"'{col}'" for col in collections])
+                tools_text += f"\n**Collections**: {col_list}\n"
+        except:
+            pass
+        
+        # Load tool instructions from file
+        tool_instructions_file = Path(__file__).parent / "prompts" / "tool_instructions.txt"
+        try:
+            if tool_instructions_file.exists():
+                with open(tool_instructions_file, "r", encoding="utf-8") as f:
+                    tool_instructions = f.read().strip()
+                    tools_text += f"\n{tool_instructions}\n"
+            else:
+                tools_text += "\n**Hướng dẫn**: Khi cần tra cứu, gọi công cụ qua API native function calling. API sẽ tự động xử lý.\n"
+        except Exception as e:
+            logger.debug(f"Failed to load tool instructions from file: {e}")
+            tools_text += "\n**Hướng dẫn**: Khi cần tra cứu, gọi công cụ qua API native function calling. API sẽ tự động xử lý.\n"
+        
+        return tools_text
 
     def reset_conversation(self) -> None:
         pass

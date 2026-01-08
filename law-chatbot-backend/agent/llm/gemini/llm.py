@@ -125,44 +125,54 @@ class GeminiLLM:
             gemini_messages = self._convert_messages(current_messages)
             response = self.model.generate_content(gemini_messages)
             
+            # Check for native function calls only (Gemini API native format)
+            tool_calls = self._extract_native_function_calls(response)
+            
+            # Get response text if available
+            response_text = response.text if response and response.text else ""
+            
+            if tool_calls and len(tool_calls) > 0:
+                # Execute all tool calls in sequence
+                tool_results = []
+                tool_names = []
+                
+                for tool_call in tool_calls:
+                    tool_name = tool_call.get("tool_name")
+                    tool_input = tool_call.get("tool_input", {})
+                    tool_names.append(tool_name)
+                    
+                    logger.info(f"Executing tool: {tool_name}")
+                    result = coordinator.execute_function_call(tool_name, tool_input)
+                    
+                    if result.success:
+                        tool_result = json.dumps(result.result, default=str, indent=2)
+                        tool_results.append(f"Công cụ '{tool_name}' đã được thực thi thành công. Kết quả: {tool_result}")
+                    else:
+                        tool_results.append(f"Công cụ '{tool_name}' thực thi thất bại. Lỗi: {result.error}")
+                
+                # Add assistant message with all tool calls
+                tool_calls_summary = ", ".join(tool_names)
+                current_messages.append({
+                    "role": "assistant", 
+                    "content": response_text if response_text else f"Tool calls: {tool_calls_summary}"
+                })
+                
+                # Add all tool results as user message
+                all_results = "\n\n".join(tool_results)
+                current_messages.append({
+                    "role": "user",
+                    "content": f"Các công cụ đã được thực thi:\n\n{all_results}\n\nTiếp tục nhiệm vụ sử dụng thông tin này."
+                })
+                
+                logger.debug(f"All {len(tool_calls)} tool executions completed, continuing conversation")
+                continue
+            
+            # No tool calls found, return final response
             if not response or not response.text:
                 logger.warning("Empty response from Gemini API")
                 return {"content": "No response from API"}
             
             response_text = response.text
-            
-            # Try to parse tool calls from response
-            tool_call_parsed = coordinator.parse_tool_call(response_text)
-            
-            if tool_call_parsed:
-                # Execute the tool call
-                tool_name = tool_call_parsed.get("tool_name")
-                tool_input = tool_call_parsed.get("tool_input", {})
-                
-                logger.info(f"Executing tool: {tool_name}")
-                result = coordinator.execute_function_call(tool_name, tool_input)
-                
-                # Add assistant message with tool call
-                current_messages.append({
-                    "role": "assistant", 
-                    "content": response_text
-                })
-                
-                # Add tool result as user message
-                if result.success:
-                    tool_result = json.dumps(result.result, default=str, indent=2)
-                else:
-                    tool_result = f"Error: {result.error}"
-                
-                current_messages.append({
-                    "role": "user",
-                    "content": f"Công cụ '{tool_name}' đã được thực thi. Kết quả: {tool_result}\n\nTiếp tục nhiệm vụ sử dụng thông tin này."
-                })
-                
-                logger.debug(f"Tool execution completed, continuing conversation")
-                continue
-            
-            # No tool calls found, return final response
             logger.info(f"Final response received after {iteration} iterations")
             return {
                 "content": response_text,
@@ -177,6 +187,52 @@ class GeminiLLM:
             "content": response_text if 'response_text' in locals() else "Max iterations reached",
             "model": self.model_name
         }
+    
+    def _extract_native_function_calls(self, response: Any) -> List[Dict[str, Any]]:
+        """
+        Extract all native function calls from Gemini API response.
+        
+        Gemini API can return multiple function calls in response.candidates[0].content.parts
+        
+        Args:
+            response: Gemini API response object
+            
+        Returns:
+            List of dictionaries with tool_name and tool_input, empty list if no function calls found
+        """
+        tool_calls = []
+        try:
+            if not response or not response.candidates:
+                return tool_calls
+            
+            candidate = response.candidates[0]
+            if not hasattr(candidate, 'content') or not candidate.content:
+                return tool_calls
+            
+            if not hasattr(candidate.content, 'parts') or not candidate.content.parts:
+                return tool_calls
+            
+            # Check each part for function_call
+            for part in candidate.content.parts:
+                if hasattr(part, 'function_call') and part.function_call:
+                    func_call = part.function_call
+                    func_name = func_call.name if hasattr(func_call, 'name') else None
+                    func_args = func_call.args if hasattr(func_call, 'args') else {}
+                    
+                    if func_name:
+                        logger.info(f"Found native function call: {func_name}")
+                        tool_calls.append({
+                            "tool_name": func_name,
+                            "tool_input": func_args if isinstance(func_args, dict) else {}
+                        })
+            
+            if tool_calls:
+                logger.info(f"Found {len(tool_calls)} native function call(s)")
+            
+            return tool_calls
+        except Exception as e:
+            logger.debug(f"Error extracting native function calls: {e}")
+            return tool_calls
     
     def _convert_messages(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """

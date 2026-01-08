@@ -32,7 +32,7 @@ services:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
     volumes:
-      - chromadb_data:/chroma/chroma
+      - ../law-chatbot-backend/storage/chroma:/chroma/chroma
     networks:
       - law_chatbot_network
 
@@ -63,6 +63,7 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ../law-chatbot-backend/storage/logs:/app/storage/logs
+      - ../law-chatbot-backend/storage/chroma:/app/storage/chroma
       - ../law-chatbot-backend:/app
 
   # Frontend
@@ -76,6 +77,9 @@ services:
     restart: unless-stopped
     ports:
       - "3000:80"
+    # Mount dist only if you want to use local build (uncomment after building locally)
+    # volumes:
+    #   - ../law-chatbot-frontend/dist:/usr/share/nginx/html
     depends_on:
       - backend
     networks:
@@ -85,8 +89,6 @@ volumes:
   mongodb_data:
     driver: local
   mongodb_config:
-    driver: local
-  chromadb_data:
     driver: local
 
 networks:

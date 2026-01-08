@@ -28,33 +28,52 @@ from pathlib import Path
 
 def _build_tool_instructions(available_tools: List[Dict[str, Any]], collections: Optional[List[str]] = None) -> str:
     """Build instructions for tool calling based on available tools."""
-    tools_text = "Các công cụ có sẵn:\n"
+    tools_text = "## CÔNG CỤ KHẢ DỤNG\n\n"
     for tool in available_tools:
         func = tool.get("function", {})
         name = func.get("name", "unknown")
         desc = func.get("description", "")
         params = func.get("parameters", {})
-        tools_text += f"\n- {name}: {desc}\n"
+        tools_text += f"**{name}**: {desc}\n"
         if params.get("properties"):
-            tools_text += f"  Tham số: {json.dumps(params.get('properties'), indent=2)}\n"
+            props = params.get("properties", {})
+            required = params.get("required", [])
+            tools_text += "  Tham số:\n"
+            for param_name, param_info in props.items():
+                req_mark = " (bắt buộc)" if param_name in required else ""
+                tools_text += f"  - {param_name} ({param_info.get('type', 'string')}){req_mark}: {param_info.get('description', '')}\n"
     
     # Add collections information if available
     if collections:
-        tools_text += f"\n\nCác Collection có sẵn:\n"
-        for col in collections:
-            tools_text += f"- '{col}'\n"
-        tools_text += "\nKhi sử dụng 'query_collection', hãy chọn collection phù hợp nhất với chủ đề câu hỏi của người dùng.\n"
+        col_list = ', '.join([f"'{col}'" for col in collections])
+        tools_text += f"\n**Collections có sẵn**: {col_list}\n"
+        tools_text += "Khi dùng 'query_collection', chọn collection phù hợp với chủ đề.\n"
     
-    tools_text += """
+    # Load tool instructions from file
+    tool_instructions_file = Path(__file__).parent.parent / "prompts" / "tool_instructions.txt"
+    tool_instructions = ""
+    try:
+        if tool_instructions_file.exists():
+            with open(tool_instructions_file, "r", encoding="utf-8") as f:
+                tool_instructions = f.read().strip()
+    except Exception as e:
+        logger.debug(f"Failed to load tool instructions from file: {e}")
+        # Fallback to default instructions
+        tool_instructions = """
+## HƯỚNG DẪN GỌI CÔNG CỤ
 
-QUAN TRỌNG: Khi bạn cần gọi một công cụ:
-1. Trả lời bằng cấu trúc JSON: {"tool_calls": [{"name": "tool_name", "arguments": {"param": "value"}}]}
-2. Các 'arguments' phải khớp với tham số của công cụ.
-3. Đối với 'query_collection', bạn PHẢI chỉ định collection_name tồn tại trong các collection có sẵn.
-4. Bạn có thể gọi nhiều công cụ trong một phản hồi (liệt kê chúng trong mảng tool_calls).
-5. Sau khi kết quả công cụ được cung cấp, bạn có thể tiếp tục giải quyết nhiệm vụ.
-6. Khi bạn có câu trả lời cuối cùng và không cần thêm công cụ, trả lời bình thường chỉ với "content" (không có tool_calls).
+Khi cần tra cứu thông tin, bạn PHẢI gọi công cụ bằng cách trả về function_call qua API native format.
+
+**Quy tắc:**
+1. Gọi công cụ khi cần tra cứu văn bản pháp luật
+2. Có thể gọi nhiều công cụ cùng lúc nếu cần
+3. Sau khi nhận kết quả, phân tích và trả lời người dùng
+4. Chỉ trả về câu trả lời cuối cùng khi đã có đủ thông tin (không gọi thêm công cụ)
+
+**Lưu ý:** API sẽ tự động xử lý function calls, bạn chỉ cần quyết định khi nào cần gọi công cụ nào.
 """
+    
+    tools_text += f"\n{tool_instructions}"
     return tools_text
 
 

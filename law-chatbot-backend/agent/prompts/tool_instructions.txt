@@ -1,0 +1,12 @@
+## HƯỚNG DẪN GỌI CÔNG CỤ
+
+Khi cần tra cứu thông tin, bạn PHẢI gọi công cụ bằng cách trả về function_call qua API native format.
+
+**Quy tắc:**
+1. Gọi công cụ khi cần tra cứu văn bản pháp luật
+2. Có thể gọi nhiều công cụ cùng lúc nếu cần
+3. Sau khi nhận kết quả, phân tích và trả lời người dùng
+4. Chỉ trả về câu trả lời cuối cùng khi đã có đủ thông tin (không gọi thêm công cụ)
+
+**Lưu ý:** API sẽ tự động xử lý function calls, bạn chỉ cần quyết định khi nào cần gọi công cụ nào.
+
