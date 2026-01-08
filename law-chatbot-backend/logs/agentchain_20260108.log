@@ -117,3 +117,34 @@
 2026-01-08 03:50:12 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
 2026-01-08 03:50:12 - agentchain - INFO - Planner initialized successfully
 2026-01-08 03:50:12 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-08 03:55:15 - agentchain - INFO - Initialized Google Embedding function with model: models/text-embedding-004, task_type: retrieval_document
+2026-01-08 03:55:15 - agentchain - INFO - Initializing VectorDatabase with backend type: chroma
+2026-01-08 03:55:15 - agentchain - INFO - Initializing RAGAgent...
+2026-01-08 03:55:15 - agentchain - INFO - Initializing FunctionCallingCoordinator
+2026-01-08 03:55:15 - agentchain - INFO - Creating LLM with type: gemini
+2026-01-08 03:55:15 - agentchain - INFO - Creating LLM of type: gemini
+2026-01-08 03:55:15 - agentchain - INFO - Creating GeminiLLM (model: gemini-2.5-flash)
+2026-01-08 03:55:15 - agentchain - INFO - Configuring Gemini API with model: gemini-2.5-flash
+2026-01-08 03:55:15 - agentchain - INFO - GeminiLLM initialized successfully with model: gemini-2.5-flash
+2026-01-08 03:55:15 - agentchain - INFO - GeminiLLM created successfully
+2026-01-08 03:55:15 - agentchain - INFO - LLM created successfully
+2026-01-08 03:55:15 - agentchain - INFO - Initializing AutoPlanExecutor for planner
+2026-01-08 03:55:15 - agentchain - INFO - Initializing AutoPlanExecutor
+2026-01-08 03:55:15 - agentchain - INFO - Loading prompt from /app/agent/prompts/plan_prompt.txt
+2026-01-08 03:55:15 - agentchain - INFO - Loading prompt from /app/agent/prompts/non_plan_prompt.txt
+2026-01-08 03:55:15 - agentchain - INFO - Planner initialized successfully
+2026-01-08 03:55:15 - agentchain - INFO - RAGAgent initialization completed (use_conversation_history=True)
+2026-01-08 03:55:29 - agentchain - INFO - User message received: chào bạn là ai?
+2026-01-08 03:55:29 - agentchain - INFO - [RAG AGENT] Planner check: enable_planner=True, use_planner=None, call_planner=True, planner is None=False
+2026-01-08 03:55:29 - agentchain - INFO - [RAG AGENT] Using planner for message processing
+2026-01-08 03:55:29 - agentchain - INFO - [AUTO PLAN EXECUTOR] Classifying prompt to determine execution mode (plan or non-plan)
+2026-01-08 03:55:29 - agentchain - INFO - [PLAN CLASSIFIER] Starting classification with adapter: gemini-2.5-flash
+2026-01-08 03:55:29 - agentchain - ERROR - Error calling Gemini API: 400 API key expired. Please renew the API key. [reason: "API_KEY_INVALID"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+, locale: "en-US"
+message: "API key expired. Please renew the API key."
+]

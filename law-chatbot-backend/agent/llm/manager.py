@@ -1,12 +1,13 @@
 """LLM manager / factory for selecting available LLM adapters.
 
 This module exposes `get_llm(llm_type, config)` which returns
-a GeminiLLM or VNPTLLM instance.
+a GeminiLLM, OpenAILLM, or VNPTLLM instance.
 """
 from typing import Any, Dict, Optional
 import os
 
 from .gemini import GeminiLLM
+from .openai import OpenAILLM
 from .vnpt import VNPTLLM
 from agent.logging import logger
 
@@ -21,14 +22,18 @@ except ImportError:
 
 
 def get_llm(llm_type: str = "gemini", config: Optional[Dict[str, Any]] = None):
-    """Return an instantiated LLM instance (GeminiLLM or VNPTLLM).
+    """Return an instantiated LLM instance (GeminiLLM, OpenAILLM, or VNPTLLM).
 
     Args:
-        llm_type: string identifier ('gemini' or 'vnpt')
+        llm_type: string identifier ('gemini', 'openai', or 'vnpt')
         config: configuration dict with keys:
             For Gemini:
             - 'api_key': API key for Gemini (or use GEMINI_API_KEY env var)
             - 'model': model name (or use GEMINI_MODEL env var, default: 'gemini-pro')
+            For OpenAI:
+            - 'api_key': API key for OpenAI (or use OPENAI_API_KEY env var)
+            - 'model': model name (or use OPENAI_MODEL env var, default: 'gpt-3.5-turbo')
+            - 'base_url': Optional base URL for API (or use OPENAI_BASE_URL env var)
             For VNPT:
             - 'api_key': Authorization Bearer token (or use VNPT_AUTHORIZATION env var)
             - 'token_id': Token ID (or use VNPT_TOKEN_ID env var)
@@ -37,15 +42,25 @@ def get_llm(llm_type: str = "gemini", config: Optional[Dict[str, Any]] = None):
                        (or use VNPT_MODEL env var, default: 'vnptai_hackathon_large')
     
     Returns:
-        GeminiLLM or VNPTLLM instance
+        GeminiLLM, OpenAILLM, or VNPTLLM instance
         
     Raises:
-        ValueError: If llm_type is not 'gemini' or 'vnpt', or if credentials not provided
+        ValueError: If llm_type is not 'gemini', 'openai', or 'vnpt', or if credentials not provided
         ImportError: If required packages not installed
     
     Examples:
         # Using Gemini with environment variable for API key
         llm = get_llm("gemini")
+        
+        # Using OpenAI with environment variable for API key
+        llm = get_llm("openai")
+        
+        # Using OpenAI with explicit credentials and model
+        llm = get_llm("openai", config={
+            "api_key": "your-api-key",
+            "model": "gpt-4",
+            "base_url": "https://api.openai.com/v1"  # Optional
+        })
         
         # Using VNPT with environment variables
         llm = get_llm("vnpt")
@@ -74,6 +89,18 @@ def get_llm(llm_type: str = "gemini", config: Optional[Dict[str, Any]] = None):
         
         return llm
     
+    elif llm_type == "openai":
+        api_key = config.get("api_key")
+        # Priority: config > OPENAI_MODEL env var > default
+        model = config.get("model") or os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+        base_url = config.get("base_url")
+        
+        logger.info(f"Creating OpenAILLM (model: {model})")
+        llm = OpenAILLM(api_key=api_key, model=model, base_url=base_url)
+        logger.info("OpenAILLM created successfully")
+        
+        return llm
+    
     elif llm_type == "vnpt":
         api_key = config.get("api_key")
         token_id = config.get("token_id")
@@ -90,4 +117,4 @@ def get_llm(llm_type: str = "gemini", config: Optional[Dict[str, Any]] = None):
         logger.info("VNPTLLM created successfully")
         return llm
 
-    raise ValueError(f"Unknown llm_type: {llm_type}. Supported types: 'gemini', 'vnpt'.")
+    raise ValueError(f"Unknown llm_type: {llm_type}. Supported types: 'gemini', 'openai', 'vnpt'.")
