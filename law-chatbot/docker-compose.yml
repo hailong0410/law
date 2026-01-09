@@ -37,7 +37,9 @@ services:
     volumes:
       # Mount host storage/chroma to container /chroma/chroma
       # This ensures data persists outside the container
+      # ChromaDB server mode with IS_PERSISTENT=TRUE will use working directory
       - ../law-chatbot-backend/storage/chroma:/chroma/chroma
+    working_dir: /chroma
     networks:
       - law_chatbot_network
 
