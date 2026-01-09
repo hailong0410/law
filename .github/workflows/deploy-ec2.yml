@@ -1,0 +1,71 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Cho phép chạy thủ công
+
+env:
+  AWS_REGION: ap-southeast-1  # Thay đổi theo region của bạn
+  EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
+  EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+  EC2_USER: ubuntu  # hoặc ec2-user tùy AMI
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy files to EC2
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '__pycache__' \
+            --exclude '*.pyc' \
+            --exclude '.env' \
+            --exclude 'storage/chroma' \
+            --exclude 'storage/logs' \
+            ./ ${{ env.EC2_USER }}@${{ secrets.EC2_INSTANCE_IP }}:/home/${{ env.EC2_USER }}/law-chatbot/
+
+      - name: Deploy on EC2
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ env.EC2_USER }}@${{ secrets.EC2_INSTANCE_IP }} << 'EOF'
+            cd /home/${{ env.EC2_USER }}/law-chatbot/law-chatbot
+            
+            # Pull latest code (nếu dùng git trên server)
+            # git pull origin main
+            
+            # Stop existing containers
+            docker-compose down || true
+            
+            # Build and start containers
+            docker-compose up -d --build
+            
+            # Clean up old images
+            docker image prune -f
+            
+            # Show status
+            docker-compose ps
+          EOF
+
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -f http://${{ secrets.EC2_INSTANCE_IP }}:8000/health || exit 1
+
