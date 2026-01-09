@@ -116,16 +116,39 @@ def main():
     print()
     
     # Configuration
-    data_dir = Path(__file__).parent.parent / "storage" / "data"
+    # Luôn sử dụng absolute path dựa trên vị trí script (không phụ thuộc vào current directory)
+    script_path = Path(__file__).resolve()  # Absolute path của script
+    project_root = script_path.parent.parent.resolve()  # law-chatbot-backend/
+    storage_root = project_root / "storage"  # law-chatbot-backend/storage/
+    
+    # Đảm bảo data_dir luôn nằm trong storage
+    data_dir = storage_root / "data"
+    data_dir = data_dir.resolve()
+    
+    # Đảm bảo persist_dir luôn nằm trong storage/chroma
+    default_persist_dir = storage_root / "chroma"
+    default_persist_dir = default_persist_dir.resolve()
+    
     collection_name = "fire_protection_law"
     
-    # Always use absolute path based on script location (not current directory)
-    project_root = Path(__file__).parent.parent  # /app/ in container
-    default_persist_dir = project_root / "storage" / "chroma"
+    # Lấy từ env hoặc dùng default
+    persist_dir_str = os.getenv("CHROMA_PERSIST_DIRECTORY", None)
     
-    # Get from env or use default absolute path
-    persist_dir_str = os.getenv("CHROMA_PERSIST_DIRECTORY", str(default_persist_dir))
-    persist_dir = Path(persist_dir_str).resolve()  # Convert to absolute path
+    if persist_dir_str:
+        # Nếu có env variable, resolve thành absolute path
+        persist_dir = Path(persist_dir_str).resolve()
+        
+        # Validate: persist_dir phải nằm trong storage_root
+        try:
+            persist_dir.relative_to(storage_root)
+        except ValueError:
+            # Path không nằm trong storage_root, sử dụng default
+            print(f"   ⚠️  CHROMA_PERSIST_DIRECTORY ({persist_dir}) không nằm trong storage root ({storage_root})")
+            print(f"   📍 Sử dụng default path: {default_persist_dir}")
+            persist_dir = default_persist_dir
+    else:
+        # Không có env variable, dùng default
+        persist_dir = default_persist_dir
     
     # ChromaDB server settings (for Docker)
     chroma_host = os.getenv("CHROMA_HOST", None)

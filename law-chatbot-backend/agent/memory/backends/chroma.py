@@ -240,21 +240,57 @@ class ChromaVectorStore(VectorStoreBackend):
     ) -> List[StoredChunk]:
         """List all chunks in Chroma collection."""
         try:
+            logger.debug(f"Getting or creating collection: {collection_name}")
             collection = self._get_or_create_collection(collection_name)
+            
+            logger.debug(f"Calling collection.get() for collection: {collection_name}")
             result = collection.get()
             
-            chunks = []
-            for i, chunk_id in enumerate(result['ids']):
-                chunk = StoredChunk(
-                    id=chunk_id,
-                    content=result['documents'][i] if result['documents'] else "",
-                    metadata=result['metadatas'][i] if result['metadatas'] else {}
-                )
-                chunks.append(chunk)
+            # Log result structure for debugging
+            if result:
+                ids_count = len(result.get('ids', [])) if result.get('ids') else 0
+                docs_count = len(result.get('documents', [])) if result.get('documents') else 0
+                metadata_count = len(result.get('metadatas', [])) if result.get('metadatas') else 0
+                logger.debug(f"Collection.get() returned - IDs: {ids_count}, Documents: {docs_count}, Metadatas: {metadata_count}")
+                
+                if ids_count == 0:
+                    logger.warning(f"Collection '{collection_name}' exists but contains 0 chunks")
+                    # Try to get collection count
+                    try:
+                        count = collection.count()
+                        logger.info(f"Collection '{collection_name}' count() method returns: {count}")
+                    except Exception as count_error:
+                        logger.debug(f"Could not get collection count: {count_error}")
+            else:
+                logger.warning(f"Collection.get() returned None or empty result for: {collection_name}")
             
+            chunks = []
+            ids = result.get('ids', []) if result else []
+            
+            if not ids:
+                logger.info(f"No chunk IDs found in collection: {collection_name}")
+                return []
+            
+            logger.debug(f"Processing {len(ids)} chunk(s) from collection: {collection_name}")
+            
+            for i, chunk_id in enumerate(ids):
+                try:
+                    chunk = StoredChunk(
+                        id=chunk_id,
+                        content=result['documents'][i] if result.get('documents') and i < len(result['documents']) else "",
+                        metadata=result['metadatas'][i] if result.get('metadatas') and i < len(result['metadatas']) else {}
+                    )
+                    chunks.append(chunk)
+                except Exception as chunk_error:
+                    logger.warning(f"Error processing chunk {i} (ID: {chunk_id}): {chunk_error}")
+                    continue
+            
+            logger.info(f"Successfully listed {len(chunks)} chunk(s) from collection: {collection_name}")
             return chunks
         except Exception as e:
-            print(f"Error listing chunks from Chroma: {e}")
+            logger.error(f"Error listing chunks from Chroma collection '{collection_name}': {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return []
     
     def create_collection(
@@ -335,27 +371,41 @@ class ChromaVectorStore(VectorStoreBackend):
             if self.embedding_function:
                 try:
                     # Try to get existing collection first
+                    logger.debug(f"Attempting to get existing collection: {collection_name}")
                     collection = self.client.get_collection(name=collection_name)
                     # Collection already exists, use it
-                    logger.debug(f"Using existing collection: {collection_name}")
+                    logger.info(f"Successfully retrieved existing collection: {collection_name}")
+                    try:
+                        count = collection.count()
+                        logger.info(f"Collection '{collection_name}' contains {count} item(s)")
+                    except Exception as count_error:
+                        logger.debug(f"Could not get collection count: {count_error}")
                 except Exception as e:
                     # Collection doesn't exist, create new one
-                    logger.debug(f"Collection {collection_name} doesn't exist, creating new one")
+                    logger.info(f"Collection '{collection_name}' doesn't exist (error: {e}), creating new one")
                     try:
                         collection = self.client.create_collection(
                             name=collection_name,
                             embedding_function=self.embedding_function
                         )
+                        logger.info(f"Successfully created new collection: {collection_name}")
                     except Exception as create_error:
                         # If creation fails (e.g., collection was created between get and create),
                         # try to get it again
                         if "already exists" in str(create_error).lower() or "409" in str(create_error):
-                            logger.debug(f"Collection was created by another process, getting it...")
+                            logger.info(f"Collection was created by another process, getting it...")
                             collection = self.client.get_collection(name=collection_name)
+                            try:
+                                count = collection.count()
+                                logger.info(f"Collection '{collection_name}' contains {count} item(s)")
+                            except Exception:
+                                pass
                         else:
+                            logger.error(f"Error creating collection '{collection_name}': {create_error}")
                             raise create_error
             else:
                 # No embedding function - raise error to force explicit configuration
+                logger.error("No embedding function provided for ChromaDB collection")
                 raise ValueError(
                     "No embedding function provided. "
                     "Please provide embedding_function parameter (e.g., VNPT or Google embedding). "

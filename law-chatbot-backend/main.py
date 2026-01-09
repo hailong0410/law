@@ -74,9 +74,17 @@ async def startup_event():
         chroma_persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", "./storage/chroma")
         embedding_provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()  # "gemini" or "openai"
         
+        # ChromaDB connection settings
+        chroma_host = os.getenv("CHROMA_HOST", None)
+        chroma_port = os.getenv("CHROMA_PORT", None)
+        
         # Log configuration
         model_name = llm_config.get("model", "default")
         print(f">>> Config: LLM={llm_type.upper()}({model_name}), Embedding={embedding_provider.upper()}, VectorDB={vector_db_backend}", flush=True)
+        if chroma_host and chroma_port:
+            print(f">>> ChromaDB: Server mode - {chroma_host}:{chroma_port}", flush=True)
+        else:
+            print(f">>> ChromaDB: Local mode - {chroma_persist_dir}", flush=True)
         vector_db = None
         
         if vector_db_backend == "chroma":
@@ -110,11 +118,21 @@ async def startup_event():
                 raise
             
             # Create VectorDatabase with ChromaDB backend
-            vector_db = VectorDatabase(
-                backend_type="chroma",
-                persist_directory=chroma_persist_dir,
-                embedding_function=embedding_function
-            )
+            # If CHROMA_HOST and CHROMA_PORT are set, use server mode (HttpClient)
+            # Otherwise, use local mode (PersistentClient)
+            if chroma_host and chroma_port:
+                vector_db = VectorDatabase(
+                    backend_type="chroma",
+                    host=chroma_host,
+                    port=int(chroma_port),
+                    embedding_function=embedding_function
+                )
+            else:
+                vector_db = VectorDatabase(
+                    backend_type="chroma",
+                    persist_directory=chroma_persist_dir,
+                    embedding_function=embedding_function
+                )
         else:
             from agent.memory import VectorDatabase
             vector_db = VectorDatabase(backend_type=vector_db_backend)

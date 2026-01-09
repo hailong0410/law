@@ -503,14 +503,17 @@ class VectorDatabase:
         """
         logger.info(f"Retrieving all documents from collection: {collection_name}")
         chunks = self.backend.list_chunks(collection_name)
+        logger.info(f"Found {len(chunks)} chunk(s) in collection: {collection_name}")
         
         results = []
         processed_docs = set()
+        skipped_chunks = 0
         
         for chunk in chunks:
             doc_id = chunk.metadata.get("document_id", "") if chunk.metadata else ""
             
             if not doc_id or doc_id not in self.documents:
+                skipped_chunks += 1
                 continue
             
             doc_record = self.documents[doc_id]
@@ -526,37 +529,191 @@ class VectorDatabase:
                 results.append(result)
                 processed_docs.add(doc_id)
         
+        logger.info(f"Retrieved {len(results)} unique document(s) from collection: {collection_name} (skipped {skipped_chunks} chunk(s) without valid document_id)")
+        if results:
+            logger.info(f"Document IDs: {[r['document_id'][:12] + '...' for r in results[:5]]}")
+        
         return results
+    
+    def retrieve_by_document_id(
+        self,
+        document_id: str,
+        collection_name: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a specific document by its ID.
+        This function retrieves from ChromaDB directly, not from memory.
+        Works even after restart.
+        
+        Args:
+            document_id: ID of the document to retrieve
+            collection_name: Optional collection name. If not provided, searches all collections.
+        
+        Returns:
+            Dictionary with document data or None if not found
+        """
+        logger.info(f"Retrieving document by ID: {document_id}")
+        
+        # If document is in memory, use it (faster)
+        if document_id in self.documents:
+            logger.debug(f"Document {document_id} found in memory")
+            doc_record = self.documents[document_id]
+            reconstructed = self.reconstruct_document(document_id)
+            return {
+                "document_id": document_id,
+                "num_chunks": len(doc_record.chunks),
+                "metadata": doc_record.metadata,
+                "full_document": reconstructed,
+                "chunking_strategy": doc_record.chunking_strategy,
+                "collection_name": doc_record.collection_name,
+                "created_at": doc_record.created_at,
+                "updated_at": doc_record.updated_at
+            }
+        
+        # If not in memory, search in backend (works after restart)
+        logger.debug(f"Document {document_id} not in memory, searching in backend")
+        
+        # If collection_name not provided, search in all collections
+        collections_to_search = [collection_name] if collection_name else self.list_collections()
+        
+        if not collections_to_search:
+            logger.warning("No collections found to search")
+            return None
+        
+        # Search through collections
+        for coll_name in collections_to_search:
+            try:
+                chunks = self.backend.list_chunks(coll_name)
+                logger.debug(f"Searching in collection '{coll_name}': found {len(chunks)} chunks")
+                
+                # Filter chunks by document_id
+                matching_chunks = []
+                for chunk in chunks:
+                    chunk_doc_id = chunk.metadata.get("document_id", "") if chunk.metadata else ""
+                    if chunk_doc_id == document_id:
+                        matching_chunks.append(chunk)
+                
+                if matching_chunks:
+                    logger.info(f"Found {len(matching_chunks)} chunk(s) for document {document_id} in collection '{coll_name}'")
+                    
+                    # Sort chunks by chunk_index
+                    matching_chunks.sort(key=lambda c: c.metadata.get("chunk_index", 0) if c.metadata else 0)
+                    
+                    # Extract metadata from first chunk (should be same for all chunks)
+                    first_chunk_metadata = matching_chunks[0].metadata or {}
+                    
+                    # Get document metadata (excluding internal fields)
+                    doc_metadata = {
+                        k: v for k, v in first_chunk_metadata.items()
+                        if k not in ["document_id", "chunk_index"]
+                    }
+                    
+                    # Reconstruct document content
+                    chunk_contents = [chunk.content for chunk in matching_chunks]
+                    
+                    # Determine chunking strategy from metadata or default
+                    chunking_strategy = first_chunk_metadata.get("chunking_strategy", "sentence")
+                    
+                    # Reconstruct based on chunking strategy
+                    if chunking_strategy == "markdown":
+                        reconstructed = '\n'.join(chunk_contents)
+                    elif chunking_strategy == "paragraph":
+                        reconstructed = '\n\n'.join(chunk_contents)
+                    elif chunking_strategy == "line":
+                        reconstructed = '\n'.join(chunk_contents)
+                    elif chunking_strategy == "sentence":
+                        reconstructed = ' '.join(chunk_contents)
+                    else:  # character
+                        reconstructed = ''.join(chunk_contents)
+                    
+                    return {
+                        "document_id": document_id,
+                        "num_chunks": len(matching_chunks),
+                        "metadata": doc_metadata,
+                        "full_document": reconstructed,
+                        "chunking_strategy": chunking_strategy,
+                        "collection_name": coll_name,
+                        "created_at": first_chunk_metadata.get("created_at"),
+                        "updated_at": first_chunk_metadata.get("updated_at")
+                    }
+                    
+            except Exception as e:
+                logger.warning(f"Error searching in collection '{coll_name}': {e}")
+                continue
+        
+        logger.warning(f"Document {document_id} not found in any collection")
+        return None
     
     def list_documents(self) -> List[Dict[str, Any]]:
         """List all documents in the database."""
         return [doc.to_dict() for doc in self.documents.values()]
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Get database statistics."""
-        total_chunks = sum(len(doc.chunks) for doc in self.documents.values())
-        total_content_length = sum(len(doc.content) for doc in self.documents.values())
+        """
+        Get database statistics.
+        Reads directly from backend to ensure accuracy, especially for remote ChromaDB.
+        """
+        collections = self.list_collections()
+        
+        # Collect statistics from backend
+        total_chunks = 0
+        total_content_length = 0
+        document_info = {}  # {doc_id: {chunks: [], collection: str, strategy: str}}
+        chunking_strategies = set()
+        
+        # Read chunks from all collections
+        for collection_name in collections:
+            try:
+                chunks = self.backend.list_chunks(collection_name)
+                
+                for chunk in chunks:
+                    total_chunks += 1
+                    total_content_length += len(chunk.content)
+                    
+                    # Extract document info from chunk metadata
+                    if chunk.metadata:
+                        doc_id = chunk.metadata.get("document_id")
+                        if doc_id:
+                            if doc_id not in document_info:
+                                document_info[doc_id] = {
+                                    "chunks": [],
+                                    "collection": collection_name,
+                                    "strategy": chunk.metadata.get("chunking_strategy", "unknown")
+                                }
+                            document_info[doc_id]["chunks"].append(chunk)
+                            
+                            strategy = chunk.metadata.get("chunking_strategy", "unknown")
+                            if strategy:
+                                chunking_strategies.add(strategy)
+            except Exception as e:
+                logger.warning(f"Error reading chunks from collection '{collection_name}': {e}")
+                continue
+        
+        total_documents = len(document_info)
+        
+        # Calculate document details
+        document_details = []
+        for doc_id, info in document_info.items():
+            doc_chunks = info["chunks"]
+            doc_content_length = sum(len(chunk.content) for chunk in doc_chunks)
+            
+            document_details.append({
+                "id": doc_id,
+                "num_chunks": len(doc_chunks),
+                "content_length": doc_content_length,
+                "strategy": info["strategy"],
+                "collection": info["collection"],
+            })
         
         return {
-            "total_documents": len(self.documents),
+            "total_documents": total_documents,
             "total_chunks": total_chunks,
             "total_content_length": total_content_length,
-            "average_chunks_per_doc": total_chunks / len(self.documents) if self.documents else 0,
+            "average_chunks_per_doc": total_chunks / total_documents if total_documents > 0 else 0,
             "average_chunk_length": total_content_length / total_chunks if total_chunks > 0 else 0,
-            "collections": self.list_collections(),
-            "chunking_strategies": list(set(
-                doc.chunking_strategy for doc in self.documents.values()
-            )),
-            "documents": [
-                {
-                    "id": doc.document_id,
-                    "num_chunks": len(doc.chunks),
-                    "content_length": len(doc.content),
-                    "strategy": doc.chunking_strategy,
-                    "collection": doc.collection_name,
-                }
-                for doc in self.documents.values()
-            ]
+            "collections": collections,
+            "chunking_strategies": sorted(list(chunking_strategies)),
+            "documents": document_details
         }
     
     def clear_all(self):

@@ -5,6 +5,7 @@ RAG-specific tools for document retrieval and processing.
 from typing import List, Dict, Any, Optional
 import json
 from datetime import datetime
+from agent.logging import logger
 
 
 class VectorDatabaseRetriever:
@@ -113,13 +114,16 @@ class VectorDatabaseRetriever:
     
     def retrieve_by_document_id(
         self,
-        document_id: str
+        document_id: str,
+        collection_name: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Retrieve a specific document by ID.
+        Works even after restart (retrieves from ChromaDB directly).
         
         Args:
             document_id: ID of the document
+            collection_name: Optional collection name to search in
         
         Returns:
             Document data or None if not found
@@ -129,18 +133,19 @@ class VectorDatabaseRetriever:
             return None
         
         try:
-            doc = self.vector_db.get_document(document_id)
-            if doc:
-                reconstructed = self.vector_db.reconstruct_document(document_id)
-                return {
-                    "document_id": document_id,
-                    "num_chunks": len(doc.chunks),
-                    "content_preview": reconstructed[:500] if reconstructed else "",
-                    "full_content": reconstructed,
-                    "metadata": doc.metadata,
-                    "chunking_strategy": doc.chunking_strategy,
-                    "created_at": doc.created_at
-                }
+            # Use the new retrieve_by_document_id which works from ChromaDB
+            result = self.vector_db.retrieve_by_document_id(
+                document_id=document_id,
+                collection_name=collection_name
+            )
+            
+            if result:
+                # Add content_preview for backward compatibility
+                full_content = result.get("full_document", "")
+                result["content_preview"] = full_content[:500] if full_content else ""
+                result["full_content"] = full_content  # Keep for consistency
+                return result
+            
             return None
         except Exception as e:
             return {"error": str(e)}
@@ -205,18 +210,23 @@ class VectorDatabaseRetriever:
             List of documents from the collection
         """
         if not self.vector_db:
+            logger.warning(f"VectorDatabase not initialized, cannot retrieve from collection: {collection_name}")
             return []
 
         try:
             # Retrieve documents metadata from the VectorDatabase for that collection
             all_docs = self.vector_db.retrieve_by_collection(collection_name)
             if not all_docs:
+                logger.info(f"No documents found in collection: {collection_name}")
                 return []
+
+            logger.info(f"Found {len(all_docs)} total document(s) in collection: {collection_name}")
 
             # If a query is provided, use Chroma's built-in embedding to search
             # Chroma will automatically generate embeddings from query text via API
             if query and hasattr(self.vector_db.backend, 'search_by_similarity'):
                 try:
+                    logger.info(f"Performing similarity search with query: '{query}' (top_k={top_k})")
                     # Use backend's search_by_similarity with query_text
                     backend_results = self.vector_db.backend.search_by_similarity(
                         query_embedding=None,
@@ -225,6 +235,8 @@ class VectorDatabaseRetriever:
                         threshold=0.0,
                         query_text=query
                     )
+                    
+                    logger.info(f"Backend returned {len(backend_results)} chunk(s) with similarity scores")
                     
                     # Convert to expected format
                     formatted_results = []
@@ -247,24 +259,44 @@ class VectorDatabaseRetriever:
                             })
                             processed_docs.add(doc_id)
                     
-                    return formatted_results[:top_k]
-                except (TypeError, AttributeError):
+                    final_results = formatted_results[:top_k]
+                    logger.info(f"Returning {len(final_results)} document(s) with similarity scores:")
+                    for i, result in enumerate(final_results, 1):
+                        doc_id = result.get("document_id", "unknown")
+                        similarity = result.get("similarity_score", 0.0)
+                        num_chunks = result.get("num_chunks", 0)
+                        title = result.get("metadata", {}).get("title", "N/A")
+                        logger.info(f"  {i}. Document ID: {doc_id[:12]}... | Similarity: {similarity:.4f} | Chunks: {num_chunks} | Title: {title[:50]}...")
+                    
+                    return final_results
+                except (TypeError, AttributeError) as e:
                     # Backend doesn't support query_text, fall through
+                    logger.warning(f"Backend doesn't support query_text search, falling back to list all: {e}")
                     pass
 
+            # No query or similarity search not available, return all documents
+            logger.info(f"Returning top {top_k} document(s) from collection (no query provided):")
             results = []
             for doc in all_docs[:top_k]:
+                doc_id = doc.get("document_id", "unknown")
+                num_chunks = doc.get("num_chunks", 0)
+                title = doc.get("metadata", {}).get("title", "N/A")
                 results.append({
-                    "document_id": doc.get("document_id", "unknown"),
-                    "num_chunks": doc.get("num_chunks", 0),
+                    "document_id": doc_id,
+                    "num_chunks": num_chunks,
                     "chunking_strategy": doc.get("chunking_strategy", "unknown"),
                     "metadata": doc.get("metadata", {}),
                     "collection": collection_name,
                     "full_document": doc.get("full_document")
                 })
+                logger.info(f"  - Document ID: {doc_id[:12]}... | Chunks: {num_chunks} | Title: {title[:50]}...")
 
+            logger.info(f"Successfully retrieved {len(results)} document(s) from collection: {collection_name}")
             return results
         except Exception as e:
+            logger.error(f"Error retrieving from collection {collection_name}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return [{"error": str(e), "collection": collection_name}]
     
     # Mock helper methods removed — production code should rely on a configured VectorDatabase.
